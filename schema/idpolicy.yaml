@@ -4,19 +4,19 @@ id_policy:
     alternates: [chebi_id]
   Gene:
     primary: hgnc_id
-    alternates: [entrez_id, ensembl_gene_id]
+    alternates: [entrez_id]
   RNA:
     primary: mirbase_id   # for miRNAs
-    alternates: [ensembl_transcript_id, hgnc_id]
+    alternates: [ensembl_id]
   Variant:
-    primary: clinvar_id
-    alternates: [rsid, hgvs]
+    primary: rsid
+    alternates: [hgvs]
   CancerType:
     primary: ncit_id
     alternates: [doid]
   Pathway:
     primary: reactome_id
-    alternates: [go_bp_id]
+    alternates: []
   Phenotype:
     primary: hpo_id
     alternates: []
