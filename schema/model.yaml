@@ -1,0 +1,94 @@
+id: talazo-kg
+name: TalazoparibResistanceKG
+version: 0.1.0
+default_prefix: TALAZO
+prefixes:
+  BIOLINK: "https://w3id.org/biolink/vocab/"
+  RO: "http://purl.obolibrary.org/obo/RO_"
+  RXNORM: "http://purl.bioontology.org/ontology/RXNORM/"
+  CHEBI: "http://purl.obolibrary.org/obo/CHEBI_"
+  HGNC: "https://identifiers.org/hgnc:"
+  NCBIGene: "https://identifiers.org/ncbigene:"
+  ENSEMBL: "https://identifiers.org/ensembl:"
+  MIRBASE: "https://www.mirbase.org/cgi-bin/mature.pl?id="
+  NCIT: "http://purl.obolibrary.org/obo/NCIT_"
+  DOID: "http://purl.obolibrary.org/obo/DOID_"
+  HPO: "http://purl.obolibrary.org/obo/HP_"
+  REACTOME: "https://identifiers.org/reactome:"
+  SO: "http://purl.obolibrary.org/obo/SO_"
+  CLINVAR: "https://www.ncbi.nlm.nih.gov/clinvar/"
+  ECO: "http://purl.obolibrary.org/obo/ECO_"
+  PROV: "http://www.w3.org/ns/prov#"
+
+classes:
+  Drug:
+    is_a: BIOLINK:Drug
+    slots: [name, rxnorm_id, chebi_id, synonyms]
+    slot_usage:
+      name: {required: true}
+  Gene:
+    is_a: BIOLINK:Gene
+    slots: [symbol, hgnc_id, entrez_id, aliases]
+  RNA:
+    is_a: BIOLINK:RNAProduct
+    slots: [symbol, type, mirbase_id, ensembl_id, aliases]
+    enums:
+      type:
+        permissible_values: [mRNA, lncRNA, miRNA, circRNA, other]
+  Variant:
+    is_a: BIOLINK:SequenceVariant
+    slots: [hgvs, rsid, gene_hgnc]
+  CancerType:
+    is_a: BIOLINK:Disease
+    slots: [name, ncit_id, doid]
+  Pathway:
+    is_a: BIOLINK:Pathway
+    slots: [name, reactome_id]
+  Phenotype:
+    is_a: BIOLINK:PhenotypicFeature
+    slots: [name, hpo_id]
+  Paper:
+    is_a: BIOLINK:Publication
+    slots: [pmid, title, year, journal]
+
+slots:
+  UPREGULATES:
+    is_a: BIOLINK:positively_regulates
+    domain: [RNA, Gene]
+    range:  [Gene, RNA, Pathway]
+    exact_mappings: [RO:0002213]
+  DOWNREGULATES:
+    is_a: BIOLINK:negatively_regulates
+    domain: [RNA, Gene]
+    range:  [Gene, RNA, Pathway]
+    exact_mappings: [RO:0002212]
+  BINDS:
+    is_a: BIOLINK:physically_interacts_with
+    domain: [RNA, Gene, Drug]
+    range:  [RNA, Gene, Drug]
+  PART_OF:
+    is_a: BIOLINK:part_of
+    domain: [Gene, RNA]
+    range:  [Pathway]
+  CAUSES_RESISTANCE_TO:
+    is_a: BIOLINK:causes
+    domain: [Gene, RNA, Variant]
+    range:  [Drug]
+  TREATS:
+    is_a: BIOLINK:treats
+    domain: [Drug]
+    range:  [CancerType]
+  ASSOCIATED_WITH_VARIANT:
+    is_a: BIOLINK:related_to
+    domain: [Variant]
+    range:  [Drug]
+
+edge_properties:
+  pmid: {type: string, required: true}
+  section: {type: string}
+  sentence_span: {type: array}
+  extractor: {type: string, permissible_values: [LLM, rule, human]}
+  confidence: {type: number, minimum: 0, maximum: 1}
+  eco_code: {type: string}  # Evidence & Conclusion Ontology
+  created_at: {type: string}
+  adjudicated: {type: boolean, default: false}

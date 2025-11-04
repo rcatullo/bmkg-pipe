@@ -1,0 +1,29 @@
+predicates:
+  UPREGULATES:
+    biolink: positively_regulates
+    ro: RO:0002213        # 'positively regulates'
+    semmeddb_from: [STIMULATES, INCREASES]
+  DOWNREGULATES:
+    biolink: negatively_regulates
+    ro: RO:0002212        # 'negatively regulates'
+    semmeddb_from: [INHIBITS, DECREASES]
+  BINDS:
+    biolink: physically_interacts_with
+    ro: RO:0002436        # 'interacts with'
+    semmeddb_from: [BINDS]   # or 'INTERACTS_WITH'
+  PART_OF:
+    biolink: part_of
+    ro: BFO:0000050
+    semmeddb_from: []
+  CAUSES_RESISTANCE_TO:
+    biolink: causes
+    ro: RO:0002410        # 'causally related to' (or more specific if you prefer)
+    semmeddb_from: [PREDISPOSES, CAUSES]
+  TREATS:
+    biolink: treats
+    ro: RO:0002606        # 'treats'
+    semmeddb_from: [TREATS]
+  ASSOCIATED_WITH_VARIANT:
+    biolink: related_to
+    ro: RO:0002410        # or generic 'contributes_to' if you want
+    semmeddb_from: [AFFECTS, ASSOCIATED_WITH]

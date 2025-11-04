@@ -1,0 +1,17 @@
+classes:
+  Drug:
+    biolink: Drug
+  Gene:
+    biolink: Gene
+  RNA:
+    biolink: RNAProduct
+  Variant:
+    biolink: SequenceVariant
+  CancerType:
+    biolink: Disease
+  Pathway:
+    biolink: Pathway
+  Phenotype:
+    biolink: PhenotypicFeature
+  Paper:
+    biolink: Publication

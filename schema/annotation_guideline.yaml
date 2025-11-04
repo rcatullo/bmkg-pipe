@@ -1,0 +1,178 @@
+annotation_guideline:
+  UPREGULATES:
+    definition: >
+      The subject increases the expression or activity of the object in an
+      experimental or mechanistic sense (not just correlation).
+    examples:
+      positive: >
+        Overexpression of lncRNA TALR1 significantly upregulated BRCA1 mRNA
+        levels in Talazoparib-treated breast cancer cells.
+      negative: >
+        We observed a positive correlation between TALR1 expression and BRCA1
+        levels across patient samples.
+    decision_rule:
+      accept_if:
+        - Wording clearly implies directional increase (e.g., "increases",
+          "upregulates", "induces expression", "enhances transcription").
+        - Described as a mechanistic or experimental effect (manipulation of
+          subject leads to increased object expression or activity).
+      reject_if:
+        - Only correlation or association is stated (e.g., "correlated with",
+          "associated with", "linked to").
+        - Relationship is speculative without strong claim (e.g., "may increase",
+          "might regulate").
+        - Direction is ambiguous (e.g., "modulates", "affects") with no clear
+          "up" direction.
+
+  DOWNREGULATES:
+    definition: >
+      The subject decreases the expression or activity of the object in an
+      experimental or mechanistic sense.
+    examples:
+      positive: >
+        miR-182 directly downregulated BRCA1 mRNA in triple-negative breast
+        cancer cells exposed to Talazoparib.
+      negative: >
+        Lower BRCA1 expression was frequently observed in tumors with high
+        miR-182 levels.
+    decision_rule:
+      accept_if:
+        - Wording clearly implies directional decrease (e.g., "downregulates",
+          "represses", "silences", "suppresses expression").
+        - There is a clear cause -> effect relationship between subject and
+          decreased object expression or activity.
+      reject_if:
+        - Statement is purely observational (e.g., "tumors with X tend to have
+          low Y") without explicit mechanism.
+        - Verb is non-directional (e.g., "interferes with", "modulates") and no
+          explicit "down" is given.
+        - Relationship is speculative without strong claim.
+
+  BINDS:
+    definition: >
+      The subject physically interacts with the object (RNA-RNA, RNA-protein,
+      drug-target), typically supported by interaction or binding evidence.
+    examples:
+      positive: >
+        RNA immunoprecipitation confirmed that lncRNA TALR1 binds BRCA1 mRNA
+        in Talazoparib-resistant cells.
+      negative: >
+        Computational analysis suggested a potential interaction between TALR1
+        and BRCA1 mRNA, which requires further validation.
+    decision_rule:
+      accept_if:
+        - Sentence claims a physical interaction (e.g., "binds", "directly
+          interacts with", "forms a complex with").
+        - Interaction is framed as direct binding, often tied to experimental
+          assays (RIP, CLIP, co-IP, pull-down, etc.).
+      reject_if:
+        - Relationship is only an in silico prediction or "putative
+          interaction" without being presented as confirmed.
+        - Sentence describes functional regulation without explicit physical
+          interaction (better captured as UPREGULATES/DOWNREGULATES).
+        - Interaction language is vague (e.g., "associated with", "linked to")
+          and not clearly physical.
+
+  PART_OF:
+    definition: >
+      The subject is a component or member of the object, such as a gene or RNA
+      being part of a pathway, complex, or larger biological entity.
+    examples:
+      positive: >
+        BRCA1 is a core component of the homologous recombination repair (HRR)
+        pathway.
+      negative: >
+        Dysregulation of BRCA1 is implicated in HRR dysfunction in Talazoparib
+        resistance.
+    decision_rule:
+      accept_if:
+        - Sentence indicates membership or structural inclusion (e.g., "is part
+          of", "belongs to", "is a component of", "is a member of").
+        - Relationship reflects a stable, context-independent fact such as
+          canonical pathway membership.
+      reject_if:
+        - Relationship is about functional impact on a pathway (e.g., "disrupts",
+          "activates", "inhibits") rather than membership.
+        - Sentence only states involvement or implication without clear
+          membership language.
+        - Statement is about context-specific behavior rather than component
+          status.
+
+  CAUSES_RESISTANCE_TO:
+    definition: >
+      The subject functionally causes or confers resistance to a specific drug,
+      such that altering the subject changes response to that drug.
+    examples:
+      positive: >
+        Overexpression of lncRNA TALR1 caused resistance to Talazoparib,
+        significantly increasing the IC50 in vitro.
+      negative: >
+        High TALR1 expression was associated with poor response to Talazoparib
+        in retrospective analyses.
+    decision_rule:
+      accept_if:
+        - Sentence explicitly claims causal contribution to resistance (e.g.,
+          "confers resistance", "mediates resistance", "leads to resistance",
+          "causes resistance").
+        - There is a clear manipulation -> resistance phenotype description
+          (overexpression/knockdown/variant leads to altered viability, IC50,
+          or treatment failure).
+      reject_if:
+        - Statement is purely associative (e.g., "associated with poor response",
+          "correlates with shorter PFS") without causal wording.
+        - Relationship is speculative ("may contribute", "might underlie") with
+          no firm claim.
+        - Drug is not clearly specified or only a broad class is mentioned,
+          unless the schema explicitly supports that generalization.
+
+  TREATS:
+    definition: >
+      The drug is used as a therapy for a disease or cancer type, with an
+      established or studied treatment role.
+    examples:
+      positive: >
+        Talazoparib is approved to treat HER2-negative, germline BRCA-mutated
+        breast cancer.
+      negative: >
+        We evaluated Talazoparib in pancreatic cancer models to explore its
+        potential therapeutic role.
+    decision_rule:
+      accept_if:
+        - Sentence indicates clinical use or established indication (e.g., "is
+          approved to treat", "is used to treat", "is indicated for").
+        - Object is a disease or cancer type.
+      reject_if:
+        - Drug is only mentioned in preclinical testing without stating it
+          treats that disease in patients.
+        - Drug is used only as an experimental tool (e.g., "cells were treated
+          with Talazoparib") without therapeutic context.
+        - Statement is hypothetical (e.g., "could be used to treat", "may serve
+          as a therapy") with no clear evidence or indication.
+
+  ASSOCIATED_WITH_VARIANT:
+    definition: >
+      A specific genetic variant is statistically or experimentally associated
+      with response to a drug (e.g., resistance or sensitivity), without
+      necessarily proving causality.
+    examples:
+      positive: >
+        The BRCA1 p.C61G variant was significantly associated with Talazoparib
+        resistance in the patient cohort.
+      negative: >
+        Several BRCA1 variants have been reported in patients treated with
+        Talazoparib, but their impact on response remains unclear.
+    decision_rule:
+      accept_if:
+        - A specific variant (rsID, HGVS, named mutation) is mentioned.
+        - Sentence states association with drug response (e.g., "associated
+          with", "linked to", "enriched in resistant patients").
+        - Relationship concerns response to a specific drug, not just disease
+          risk or prognosis.
+      reject_if:
+        - Variants are mentioned but no relationship to Talazoparib (or drug
+          response) is stated.
+        - Association is too vague (e.g., "variants have been reported") with
+          no direction or significance.
+        - Subject is a gene without a specific variant; such cases belong under
+          other relation types (e.g., CAUSES_RESISTANCE_TO) rather than
+          ASSOCIATED_WITH_VARIANT.

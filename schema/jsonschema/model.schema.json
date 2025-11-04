@@ -1,0 +1,17 @@
+{
+    "type": "object",
+    "required": ["subj","subj_type","rel","obj","obj_type","pmid","evidence"],
+    "properties": {
+        "subj_type": {"enum": ["Drug","Gene","RNA","Variant","CancerType","Pathway"]},
+        "obj_type":  {"enum": ["Drug","Gene","RNA","Variant","CancerType","Pathway"]},
+        "rel": {"enum": ["UPREGULATES","DOWNREGULATES","BINDS","PART_OF","CAUSES_RESISTANCE_TO","TREATS","ASSOCIATED_WITH_VARIANT"]},
+        "evidence": {
+            "type": "object",
+            "required": ["confidence","sentence_span"],
+            "properties": {
+                "confidence": {"type":"number","minimum":0,"maximum":1}
+            }
+        }
+    }
+}
+  
