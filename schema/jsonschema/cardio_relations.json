@@ -1,0 +1,56 @@
+{
+  "chemical_disease": {
+    "treats": "Chemical is administered with the intent to cure, arrest, or substantially ameliorate the pathology of a disease.",
+    "may_treat": "Chemical is under investigation in clinical or preclinical studies for a specific disease.",
+    "is_indicated_for": "Chemical has regulatory or guideline-approved indication for a disease. This describes regulatory status, not necessarily direct effect.",
+    "is_contraindicated_in": "The use of the chemical is explicitly advised against for a specific disease due to the risk of harm.",
+    "palliates": "Chemical alleviates symptoms or improves quality of life without altering the underlying disease course.",
+    "prevents": "Chemical is used prophylactically to reduce the incidence or formal onset of a disease.",
+    "induces_or_exacerbates": "Chemical causes the onset of a disease or worsens its signs, symptoms, or pathology. This covers adverse effects."
+  },
+  "chemical_protein": {
+    "targets_protein": "Direct interaction (binding/affinity) between a chemical and a protein, where the functional effect may be unspecified.",
+    "inhibits_protein_activity": "Chemical reduces the catalytic or signaling activity of a protein, often as an antagonist or inhibitor.",
+    "activates_protein_activity": "Chemical increases or initiates the activity of a protein, often as an agonist or activator.",
+    "is_positive_allosteric_modulator_of": "Chemical binds to an allosteric site to increase the protein's response to its endogenous ligand (PAM).",
+    "is_negative_allosteric_modulator_of": "Chemical binds to an allosteric site to decrease the protein's response to its endogenous ligand (NAM).",
+    "is_substrate_for": "Chemical is chemically modified by an enzyme (protein). This represents a direct substrate-enzyme interaction.",
+    "is_transported_by": "Chemical acts as a cargo for a transporter protein."
+  },
+  "chemical_gene": {
+    "upregulates_expression_of": "Chemical increases the transcription or mRNA stability of a gene.",
+    "downregulates_expression_of": "Chemical decreases the transcription or mRNA stability of a gene.",
+    "is_metabolized_by_gene_product_of": "The protein product of a gene enzymatically transforms (metabolizes) the chemical.",
+    "affects_methylation_of": "Chemical influences the DNA methylation status of a gene."
+  },
+  "chemical_phenotype": {
+    "alleviates_phenotype": "Chemical lessens the severity or frequency of an observable sign, symptom, or pathological process (e.g., inflammation, pain).",
+    "induces_phenotype": "Chemical causes an adverse or undesirable phenotype, often as a side effect or adverse event (e.g., nausea, headache)."
+  },
+  "gene_disease": {
+    "gene_associated_with_disease": "A statistical or observational correlation between a gene/protein variation/expression and a disease, where causality is not asserted.",
+    "gene_causes_disease": "An alteration in the gene/protein is sufficient to produce the disease phenotype (Mendelian disease context).",
+    "gene_confers_susceptibility_to_disease": "Variants in the gene/protein elevate the probability of developing a disease (polygenic risk).",
+    "is_protective_against_disease": "Variants in the gene/protein are associated with a reduced probability of developing a disease.",
+    "gene_plays_role_in_pathogenesis_of_disease": "The gene/protein plays a mechanistic role in disease development or progression but is not singly sufficient to cause it.",
+    "is_diagnostic_biomarker_for_disease": "The state of the gene/protein helps in diagnosing or confirming a disease.",
+    "is_prognostic_biomarker_for_disease": "The state of the gene/protein helps predict the likely course or outcome of a disease.",
+    "is_negative_predictive_biomarker_for_treatment": "The state of the gene/protein predicts non-response or resistance to a specific treatment.",
+    "is_positive_predictive_biomarker_for_treatment": "The state of the gene/protein predicts response or clinical benefit from a specific treatment."
+  },
+  "gene_phenotype": {
+    "gene_associated_with_phenotype": "A variation or expression level of a gene/protein correlates with a phenotype without a stated causal link.",
+    "gene_causes_phenotype": "A gene/protein alteration directly leads to an observable phenotype based on scientific evidence.",
+    "gene_influences_phenotype_susceptibility": "A gene variant alters the likelihood or severity of a phenotype, often in combination with other factors.",
+    "is_protective_against_phenotype": "A gene variant is associated with the absence or reduction of a specific phenotype."
+  },
+  "disease_phenotype": {
+    "presents_with_symptom": "A subjective experience reported by a patient resulting from a disease.",
+    "exhibits_physical_sign": "An objective clinical finding detected by a professional during physical examination.",
+    "exhibits_radiological_sign": "An objective clinical finding detected by a radiology or other imaging studies"
+    
+  },
+  "disease_disease": {
+    "is_complication_of_disease": "A secondary disease arising as a consequence of a primary disease."
+  }
+}

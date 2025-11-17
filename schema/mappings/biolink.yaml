@@ -1,17 +1,17 @@
 classes:
-  Drug:
-    biolink: Drug
   Gene:
     biolink: Gene
-  RNA:
-    biolink: RNAProduct
-  Variant:
+  Chemical:
+    biolink: ChemicalEntity
+  Mutation:
     biolink: SequenceVariant
-  CancerType:
+  Disease:
     biolink: Disease
-  Pathway:
-    biolink: Pathway
   Phenotype:
     biolink: PhenotypicFeature
-  Paper:
-    biolink: Publication
+  Pathway:
+    biolink: Pathway
+  Model:
+    biolink: PhysiologicalProcess
+  Finding:
+    biolink: ClinicalFinding
