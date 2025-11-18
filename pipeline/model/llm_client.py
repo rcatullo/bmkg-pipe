@@ -16,7 +16,7 @@ class LLMClient:
         self.settings = settings or load_settings()
         self.client = OpenAI()
 
-    def _request(
+    def build_chat_completion_kwargs(
         self,
         prompt: str,
         temperature: Optional[float] = None,
@@ -33,6 +33,26 @@ class LLMClient:
             kwargs["temperature"] = temperature
         if json_mode:
             kwargs["response_format"] = {"type": "json_object"}
+        return kwargs
+
+    def _request(
+        self,
+        prompt: str,
+        temperature: Optional[float] = None,
+        json_mode: bool = False,
+    ) -> Dict[str, Any]:
+        kwargs = self.build_chat_completion_kwargs(
+            prompt=prompt,
+            temperature=temperature,
+            json_mode=json_mode,
+        )
+        logger.debug(
+            "LLM request model=%s json_mode=%s temperature=%s prompt=%s",
+            self.settings.llm_model,
+            json_mode,
+            temperature,
+            prompt,
+        )
         try:
             response = self.client.chat.completions.create(**kwargs)
         except Exception as exc:
@@ -40,6 +60,12 @@ class LLMClient:
             return {"text": "", "json": None}
         message = response.choices[0].message
         content = message.content or ""
+        logger.debug(
+            "LLM response model=%s json_mode=%s text=%s",
+            self.settings.llm_model,
+            json_mode,
+            content,
+        )
         data = None
         if json_mode and content:
             try:
@@ -47,6 +73,8 @@ class LLMClient:
             except json.JSONDecodeError as exc:
                 logger.error("Failed to decode LLM JSON response: %s", exc)
                 data = None
+            else:
+                logger.debug("LLM parsed JSON response: %s", data)
         return {"text": content, "json": data}
 
     def complete(self, prompt: str, temperature: Optional[float] = None) -> Dict[str, Any]:

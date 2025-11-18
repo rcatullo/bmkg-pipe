@@ -2,14 +2,14 @@ import logging
 from typing import Dict, Optional
 
 from pipeline.model.llm_client import LLMClient
-from pipeline.model.pairing import CandidatePair
+from pipeline.utils.pairing import CandidatePair
 from pipeline.schema.loader import SchemaLoader
 from pipeline.utils.settings import Settings, load_settings, timestamp
 
 logger = logging.getLogger(__name__)
 
 
-class RelationClassifier:
+class RelationExtractor:
     def __init__(
         self,
         schema: SchemaLoader,
@@ -20,8 +20,8 @@ class RelationClassifier:
         self.llm = llm_client or LLMClient()
         self.settings = settings or load_settings()
 
-    def classify(self, pair: CandidatePair) -> Optional[Dict]:
-        prompt = self._prompt(pair)
+    def extract(self, pair: CandidatePair) -> Optional[Dict]:
+        prompt = self.build_prompt(pair)
         response = self.llm.json_complete(prompt)
         result = response.get("json") or {}
         if not result:
@@ -52,7 +52,7 @@ class RelationClassifier:
             "explanation": result.get("explanation", ""),
         }
 
-    def _prompt(self, pair: CandidatePair) -> str:
+    def build_prompt(self, pair: CandidatePair) -> str:
         subject = pair.subject.get("text")
         obj = pair.obj.get("text")
         allowed = "\n".join(
@@ -67,5 +67,4 @@ class RelationClassifier:
             f"Allowed predicates:\n{allowed}\n"
             "Respond as JSON {predicate: str, confidence: float, explanation: str}."
         )
-
 

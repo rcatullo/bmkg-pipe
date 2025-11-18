@@ -25,26 +25,10 @@ class EntityExtractor:
     def extract_batch(self, sentences: List[Sentence]) -> Dict[Tuple[str, int], List[Dict]]:
         if not sentences:
             return {}
-        prompt = self._batch_prompt(sentences)
+        prompt = self.build_batch_prompt(sentences)
         response = self.llm.json_complete(prompt)
         payload = response.get("json") or {}
-        results = payload.get("results", [])
-        mapping: Dict[Tuple[str, int], List[Dict]] = {}
-        for result in results:
-            pmid = str(result.get("pmid"))
-            sentence_id = int(result.get("sentence_id", 0))
-            entities = result.get("entities", [])
-            key = (pmid, sentence_id)
-            mapping[key] = [self.normalizer.normalize(e) for e in entities]
-        missing = [
-            (s.pmid, s.sentence_id)
-            for s in sentences
-            if (s.pmid, s.sentence_id) not in mapping
-        ]
-        for pmid, sentence_id in missing:
-            logger.warning("No entities returned for pmid=%s sentence_id=%s", pmid, sentence_id)
-            mapping[(pmid, sentence_id)] = []
-        return mapping
+        return self.parse_batch_results(sentences, payload)
 
     def extract(self, sentence: Sentence) -> List[Dict]:
         return self.extract_batch([sentence])[(sentence.pmid, sentence.sentence_id)]
@@ -58,7 +42,7 @@ class EntityExtractor:
             f"\nSentence: {text}"
         )
 
-    def _batch_prompt(self, sentences: Iterable[Sentence]) -> str:
+    def build_batch_prompt(self, sentences: Iterable[Sentence]) -> str:
         class_list = ", ".join(self.classes)
         entries = []
         for sentence in sentences:
@@ -75,4 +59,27 @@ class EntityExtractor:
             "Return JSON with `results`: [{pmid, sentence_id, entities:[{text,class,start,end,ids}]}].\n"
             f"Sentences JSON:\n{json.dumps(entries, ensure_ascii=False)}"
         )
+
+    def parse_batch_results(
+        self, sentences: Iterable[Sentence], payload: Dict
+    ) -> Dict[Tuple[str, int], List[Dict]]:
+        results = payload.get("results", [])
+        mapping: Dict[Tuple[str, int], List[Dict]] = {}
+        for result in results:
+            pmid = str(result.get("pmid"))
+            sentence_id = int(result.get("sentence_id", 0))
+            entities = result.get("entities", [])
+            key = (pmid, sentence_id)
+            mapping[key] = [self.normalizer.normalize(e) for e in entities]
+        expected = list(sentences)
+        for sentence in expected:
+            key = (sentence.pmid, sentence.sentence_id)
+            if key not in mapping:
+                logger.warning("No entities returned for pmid=%s sentence_id=%s", *key)
+                mapping[key] = []
+        return mapping
+
+    # Backwards compatibility for older references
+    def _batch_prompt(self, sentences: Iterable[Sentence]) -> str:  # pragma: no cover
+        return self.build_batch_prompt(sentences)
 

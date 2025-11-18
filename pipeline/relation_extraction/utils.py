@@ -1,0 +1,205 @@
+from __future__ import annotations
+
+import asyncio
+import json
+import logging
+from typing import Dict, Iterable, List, Optional
+
+from pipeline.model.llm_client import LLMClient
+from pipeline.utils.pairing import CandidatePair
+from pipeline.relation_extraction.relation_extractor import RelationExtractor
+from pipeline.utils.api_req_parallel import process_api_requests_from_file
+from pipeline.utils.settings import RequestSettings, ensure_dir, timestamp
+
+logger = logging.getLogger(__name__)
+
+
+class RelationExtractionRunner:
+    def __init__(
+        self,
+        extractor: RelationExtractor,
+        llm_client: LLMClient,
+        config: RequestSettings,
+    ) -> None:
+        self.extractor = extractor
+        self.llm = llm_client
+        self.config = config
+        self.total_pairs = 0
+        self._requests_handle = None
+        self._prepare_request_file()
+
+    def _prepare_request_file(self) -> None:
+        ensure_dir(self.config.requests_file)
+        if self.config.requests_file.exists():
+            self.config.requests_file.unlink()
+        self._requests_handle = self.config.requests_file.open("w", encoding="utf-8")
+
+    def add_pairs(self, pairs: Iterable[CandidatePair]) -> None:
+        if not pairs:
+            return
+        if self._requests_handle is None:
+            self._prepare_request_file()
+        for pair in pairs:
+            prompt = self.extractor.build_prompt(pair)
+            payload = self.llm.build_chat_completion_kwargs(
+                prompt=prompt,
+                json_mode=True,
+            )
+            payload["metadata"] = self._metadata_from_pair(pair)
+            self._requests_handle.write(json.dumps(payload) + "\n")
+            self.total_pairs += 1
+
+    def _metadata_from_pair(self, pair: CandidatePair) -> Dict:
+        return {
+            "pmid": pair.pmid,
+            "sentence_id": pair.sentence_id,
+            "sentence": pair.sentence,
+            "subject": pair.subject,
+            "object": pair.obj,
+            "predicate_names": [pred.name for pred in pair.predicates],
+            "model_name": self.extractor.settings.llm_model,
+            "model_version": self.extractor.settings.model_version,
+            "prompt_version": self.extractor.settings.prompt_version,
+        }
+
+    def run(self) -> List[Dict]:
+        self._close_request_file()
+        if self.total_pairs == 0:
+            logger.info("No candidate pairs queued for relation extraction; skipping API call.")
+            self._clear_results_file()
+            return []
+        if not self.config.api_key:
+            raise ValueError(
+                "Relation extraction requires an API key. Configure `relation_extraction.api_key` "
+                "in config.yaml or set OPENAI_API_KEY."
+            )
+        logger.info(
+            "Starting relation extraction for %d pairs using %s",
+            self.total_pairs,
+            self.config.request_url,
+        )
+        self._clear_results_file()
+        ensure_dir(self.config.results_file)
+        asyncio.run(
+            process_api_requests_from_file(
+                requests_filepath=str(self.config.requests_file),
+                save_filepath=str(self.config.results_file),
+                request_url=self.config.request_url,
+                api_key=self.config.api_key,
+                max_requests_per_minute=float(self.config.max_requests_per_minute),
+                max_tokens_per_minute=float(self.config.max_tokens_per_minute),
+                token_encoding_name=self.config.token_encoding_name,
+                max_attempts=int(self.config.max_attempts),
+                logging_level=int(self.config.logging_level),
+            )
+        )
+        return self._read_results()
+
+    def _read_results(self) -> List[Dict]:
+        results: List[Dict] = []
+        if not self.config.results_file.exists():
+            logger.warning("Relation extraction results file %s not found.", self.config.results_file)
+            return results
+        with self.config.results_file.open("r", encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    payload = json.loads(line)
+                except json.JSONDecodeError:
+                    logger.warning("Skipping malformed relation extraction response line.")
+                    continue
+                if not isinstance(payload, list) or len(payload) < 2:
+                    logger.warning("Unexpected relation extraction payload: %s", payload)
+                    continue
+                response = payload[1]
+                metadata = payload[2] if len(payload) > 2 else None
+                relation = self._build_relation(metadata, response)
+                if relation:
+                    results.append(relation)
+        return results
+
+    def _build_relation(self, metadata: Optional[Dict], response: Dict) -> Optional[Dict]:
+        if metadata is None:
+            logger.warning("Relation extraction response missing metadata.")
+            return None
+        if isinstance(response, list):
+            logger.error(
+                "Relation extraction for pmid=%s sentence_id=%s failed after retries: %s",
+                metadata.get("pmid"),
+                metadata.get("sentence_id"),
+                response,
+            )
+            return None
+        if "error" in response:
+            logger.error(
+                "Relation extraction for pmid=%s sentence_id=%s returned API error: %s",
+                metadata.get("pmid"),
+                metadata.get("sentence_id"),
+                response["error"],
+            )
+            return None
+        choices = response.get("choices") or []
+        if not choices:
+            logger.warning(
+                "Relation extraction response missing choices for pmid=%s sentence_id=%s",
+                metadata.get("pmid"),
+                metadata.get("sentence_id"),
+            )
+            return None
+        message = choices[0].get("message") or {}
+        content = message.get("content") or ""
+        if not content:
+            logger.warning(
+                "Relation extraction response missing content for pmid=%s sentence_id=%s",
+                metadata.get("pmid"),
+                metadata.get("sentence_id"),
+            )
+            return None
+        try:
+            result = json.loads(content)
+        except json.JSONDecodeError:
+            logger.warning(
+                "Failed to decode relation extraction JSON for pmid=%s sentence_id=%s: %s",
+                metadata.get("pmid"),
+                metadata.get("sentence_id"),
+                content,
+            )
+            return None
+        predicate = result.get("predicate")
+        allowed = metadata.get("predicate_names", [])
+        if predicate not in allowed:
+            logger.debug(
+                "Predicate %s not allowed for pmid=%s sentence_id=%s; skipping.",
+                predicate,
+                metadata.get("pmid"),
+                metadata.get("sentence_id"),
+            )
+            return None
+        confidence = float(result.get("confidence", 0.0))
+        return {
+            "pmid": metadata.get("pmid"),
+            "sentence_id": metadata.get("sentence_id"),
+            "sentence": metadata.get("sentence"),
+            "subject": metadata.get("subject"),
+            "object": metadata.get("object"),
+            "predicate": predicate,
+            "confidence": confidence,
+            "model_name": metadata.get("model_name"),
+            "model_version": metadata.get("model_version"),
+            "prompt_version": metadata.get("prompt_version"),
+            "timestamp": timestamp(),
+            "explanation": result.get("explanation", ""),
+        }
+
+    def _close_request_file(self) -> None:
+        if self._requests_handle is not None:
+            self._requests_handle.close()
+            self._requests_handle = None
+
+    def _clear_results_file(self) -> None:
+        ensure_dir(self.config.results_file)
+        if self.config.results_file.exists():
+            self.config.results_file.unlink()
+

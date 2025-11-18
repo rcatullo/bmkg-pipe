@@ -13,8 +13,8 @@ Optional: adjust `pipeline/config.yaml` to point to a different OpenAI model nam
 ## Data Flow
 
 1. `pipeline/fetch_pubmed.py` collects recent PubMed abstracts for “talazoparib resistance” and writes JSONL into `pipeline/data/`.
-2. `pipeline/run_pipeline.py` loads config + schema metadata, splits abstracts into sentences, and batches sentences so one LLM call can tag entities for multiple sentences.
-3. Entities are normalized with `schema/idpolicy.yaml`, candidate pairs are filtered by the domains/ranges defined in `schema/model.yaml`, and the classifier prompts the LLM using concise predicate descriptions derived from `schema/annotation_guideline.yaml`.
+2. `pipeline/run_pipeline.py` loads config + schema metadata, splits abstracts into sentences, and queues every sentence for named-entity extraction through the shared OpenAI request worker.
+3. Entities are normalized with `schema/idpolicy.yaml`, candidate pairs are filtered by the domains/ranges defined in `schema/model.yaml`, and the relation extractor prompts the LLM using concise predicate descriptions derived from `schema/annotation_guideline.yaml`.
 4. Each evaluated pair is logged to `pipeline/data/relation_log.jsonl`. Low-confidence edges are dropped, duplicates (same subject–predicate–object) are merged, and results are written to `pipeline/data/relations.jsonl` with pmids, confidence, and model metadata.
 
 ## Typical Run
@@ -29,11 +29,15 @@ python pipeline/run_pipeline.py \
   --log-level INFO
 ```
 
-Useful flags:
+### Configuration-first workflow
 
-- `--entity-batch`: number of sentences grouped per entity-extraction prompt (default 5).
-- `--threshold`: minimum confidence for keeping a relation (default 0.55).
-- `--log`/`--output`: alternate paths for logs or aggregated results.
+All configurable parameters now live in `pipeline/config.yaml`:
+
+- `paths`: input abstracts, aggregated output, and relation log destinations.
+- `logging.level`: console verbosity.
+- `named_entity_extraction` / `relation_extraction`: request URL, request/result files (`named_entity_extraction/tmp/*.jsonl` and `relation_extraction/tmp/*.jsonl`), throttling, and retry strategy for the shared OpenAI batch processor (`pipeline/utils/api_req_parallel.py`). Both stages always run through the worker—no extra CLI flags required.
+
+Update the config (and export `OPENAI_API_KEY`) before running `python pipeline/run_pipeline.py`.
 
 ## Outputs
 
