@@ -1,9 +1,10 @@
 llm:
   model: "gpt-5-nano-2025-08-07"
-  max_requests_per_minute: 1500
-  max_tokens_per_minute: 125000
+  max_requests_per_minute: 500
+  max_tokens_per_minute: 200000
   request_url: "https://api.openai.com/v1/chat/completions"
-  token_encoding_name: "cl100k_base"
+  token_encoding_name: "o200k_base"
+  max_in_flight: 50
 
 data:
   input_file: "data/pubmed_talazoparib.jsonl"

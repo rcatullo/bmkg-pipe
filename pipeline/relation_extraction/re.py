@@ -46,7 +46,7 @@ class RelationExtraction:
         sentence = pair.sentence.replace(subject, f"[SUBJ]{subject}[/SUBJ]", 1)
         sentence = sentence.replace(obj, f"[OBJ]{obj}[/OBJ]", 1)
         return (
-            "Determine which predicate (if any) fits the sentence and give a concise explanation.\n"
+            "Determine which predicate (if any) fits the sentence and give a very short explanation.\n"
             f"Sentence: {sentence}\n"
             f"Allowed predicates:\n{allowed}\n"
             "Respond as JSON {predicate: str, confidence: float, explanation: str}."
@@ -109,6 +109,7 @@ class RelationExtraction:
                 token_encoding_name=self.config["llm"]["token_encoding_name"],
                 max_attempts=int(self.config["relation_extraction"]["max_attempts"]),
                 logging_level=int(self.config["logging"]["logging_level"]),
+                max_in_flight=int(self.config["llm"].get("max_in_flight", 25)),
             )
         )
         return self._read_results()

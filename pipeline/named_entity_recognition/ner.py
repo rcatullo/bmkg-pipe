@@ -100,6 +100,7 @@ class NamedEntityRecognition:
                 token_encoding_name=self.config["llm"]["token_encoding_name"],
                 max_attempts=int(self.config["named_entity_recognition"]["max_attempts"]),
                 logging_level=int(self.config["logging"]["logging_level"]),
+                max_in_flight=int(self.config["llm"].get("max_in_flight", 25)),
             )
         )
         return self._collect_entities()
