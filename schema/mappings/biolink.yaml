@@ -1,0 +1,17 @@
+classes:
+  Gene:
+    biolink: Gene
+  Chemical:
+    biolink: ChemicalEntity
+  Mutation:
+    biolink: SequenceVariant
+  Disease:
+    biolink: Disease
+  Phenotype:
+    biolink: PhenotypicFeature
+  Pathway:
+    biolink: Pathway
+  Model:
+    biolink: PhysiologicalProcess
+  Finding:
+    biolink: ClinicalFinding

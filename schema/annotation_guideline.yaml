@@ -1,0 +1,568 @@
+annotation_guideline:
+  # Gene-Chemical Relations
+  confers_resistance_to:
+    definition: >
+      Gene/protein mediates resistance to chemical/drug with specified mechanism and context
+      (intrinsic/acquired, cancer type, fold-change).
+    examples:
+      positive: >
+        BRCA1 expression confers resistance to talazoparib in triple-negative breast cancer
+        cells, increasing IC50 by 5-fold through enhanced homologous recombination repair.
+      negative: >
+        BRCA1 expression levels were higher in patients who did not respond to talazoparib,
+        though the mechanism remains unclear.
+    decision_rule:
+      accept_if:
+        - Clear causal language (e.g., "confers resistance", "mediates resistance", "causes resistance")
+        - Includes mechanistic detail or functional validation
+        - Specifies drug and context (cancer type, cell line, or patient cohort)
+      reject_if:
+        - Only correlative or associative language without causal claim
+        - Speculative ("may confer", "could mediate") without experimental evidence
+        - No clear drug specificity
+  
+  sensitizes_to:
+    definition: >
+      Gene/protein or mutation increases vulnerability to chemical/drug. Include biomarker
+      status if validated.
+    examples:
+      positive: >
+        BRCA2 loss-of-function mutations sensitize ovarian cancer cells to PARP inhibitors,
+        reducing IC50 by 10-fold compared to wildtype.
+      negative: >
+        Patients with BRCA2 mutations showed numerically better response rates to PARP
+        inhibitors, though not statistically significant.
+    decision_rule:
+      accept_if:
+        - Clear statement of increased drug sensitivity or vulnerability
+        - Experimental validation (e.g., IC50, viability assays, clinical outcomes)
+        - Specific drug and genetic context provided
+      reject_if:
+        - Only trend or non-significant association
+        - Speculative without supporting data
+        - General statement without specific drug
+  
+  predicts_response_to:
+    definition: >
+      Gene or mutation status predicts treatment response. Specify FDA-approved/investigational
+      biomarker status when applicable.
+    examples:
+      positive: >
+        ERCC1 expression is an FDA-approved predictive biomarker for platinum-based
+        chemotherapy response in non-small cell lung cancer.
+      negative: >
+        Several studies have examined ERCC1 as a potential biomarker for platinum response,
+        with mixed results.
+    decision_rule:
+      accept_if:
+        - Explicit predictive relationship stated
+        - Clinical or regulatory validation mentioned (FDA-approved, validated biomarker)
+        - Clear association between biomarker status and treatment outcome
+      reject_if:
+        - Exploratory analysis without validation
+        - Contradictory or inconsistent findings
+        - No clear prediction of response outcomes
+  
+  # Gene-Disease Relations
+  prognostic_biomarker_in:
+    definition: >
+      Gene predicts outcome in specific cancer subtype. Specify ER+, TNBC, HER2+, and
+      validation level.
+    examples:
+      positive: >
+        Ki67 expression >20% is a validated prognostic biomarker in ER+/HER2- breast
+        cancer, associated with reduced overall survival (HR=2.3, p<0.001).
+      negative: >
+        Ki67 expression varied across breast cancer subtypes, with higher levels observed
+        in more aggressive tumors.
+    decision_rule:
+      accept_if:
+        - Clear prognostic relationship (predicts survival, recurrence, progression)
+        - Specific cancer subtype mentioned
+        - Statistical support (hazard ratio, p-value) when available
+      reject_if:
+        - Only descriptive characterization without outcome prediction
+        - No specific cancer subtype
+        - Speculative association without data
+  
+  predictive_biomarker_for:
+    definition: >
+      Gene predicts treatment response in cancer subtype. Distinguish from prognostic
+      biomarkers. Specify FDA-approved/investigational status.
+    examples:
+      positive: >
+        HER2 amplification is an FDA-approved predictive biomarker for trastuzumab
+        response in HER2+ breast cancer.
+      negative: >
+        HER2+ breast cancer patients generally have poorer prognosis, though treatment
+        options have improved outcomes.
+    decision_rule:
+      accept_if:
+        - Predicts response to specific treatment
+        - Distinguished from prognosis alone
+        - Regulatory or clinical validation noted
+      reject_if:
+        - Only prognostic information without treatment prediction
+        - General disease association
+        - No specific treatment mentioned
+  
+  driver_in:
+    definition: >
+      Gene drives oncogenesis in specific cancer subtype. Requires evidence of causal
+      role in tumor initiation or progression.
+    examples:
+      positive: >
+        KRAS G12D mutation is a driver oncogene in pancreatic ductal adenocarcinoma,
+        sufficient to initiate tumorigenesis in mouse models.
+      negative: >
+        KRAS mutations are frequently observed in pancreatic cancer, occurring in over
+        90% of cases.
+    decision_rule:
+      accept_if:
+        - Explicit driver designation with mechanistic evidence
+        - Functional validation (e.g., transformation assays, mouse models)
+        - Clear causal role in oncogenesis
+      reject_if:
+        - Only frequency or prevalence data
+        - Correlation without causation
+        - No functional validation
+  
+  tumor_suppressor_in:
+    definition: >
+      Gene suppresses tumorigenesis in specific cancer subtype. Requires evidence of
+      loss-of-function leading to cancer.
+    examples:
+      positive: >
+        TP53 functions as a tumor suppressor in colorectal cancer, with loss-of-function
+        mutations present in 60% of cases and associated with increased tumor grade.
+      negative: >
+        TP53 mutations are common in colorectal cancer and correlate with poorer outcomes.
+    decision_rule:
+      accept_if:
+        - Explicit tumor suppressor designation
+        - Evidence that loss/inactivation contributes to tumorigenesis
+        - Functional validation
+      reject_if:
+        - Only mutation frequency without functional context
+        - No evidence of tumor suppression mechanism
+        - Speculative role
+  
+  # Gene-Phenotype Relations
+  upregulated_in_resistance:
+    definition: >
+      Gene upregulated in resistance to specific drug. Specify fold-change, p-value,
+      cell lines tested, acquired vs intrinsic resistance.
+    examples:
+      positive: >
+        MDR1 expression was upregulated 8-fold (p<0.001) in acquired paclitaxel-resistant
+        ovarian cancer cells compared to parental lines.
+      negative: >
+        Several ABC transporters including MDR1 were detected at higher levels in
+        resistant cell lines.
+    decision_rule:
+      accept_if:
+        - Specific upregulation in resistance phenotype
+        - Quantitative data (fold-change, statistical significance)
+        - Clear drug and model system specified
+      reject_if:
+        - Only qualitative observation
+        - No statistical validation
+        - Unclear relationship to resistance
+  
+  downregulated_in_resistance:
+    definition: >
+      Gene downregulated in resistance to specific drug. Include fold-change, p-value,
+      and cell lines tested.
+    examples:
+      positive: >
+        BRCA1 expression was downregulated 3-fold (p=0.003) in PARP inhibitor-resistant
+        breast cancer cells.
+      negative: >
+        Lower BRCA1 levels were noted in some resistant cell lines, though not consistently.
+    decision_rule:
+      accept_if:
+        - Specific downregulation in resistance context
+        - Quantitative and statistical support
+        - Drug and model clearly stated
+      reject_if:
+        - Inconsistent or non-significant findings
+        - Speculative association
+        - No quantitative data
+  
+  correlates_with_survival:
+    definition: >
+      Gene expression correlates with overall or progression-free survival. Include
+      hazard ratio and p-value.
+    examples:
+      positive: >
+        High FOXM1 expression correlated with reduced overall survival in glioblastoma
+        (HR=2.1, 95% CI 1.5-2.9, p<0.001).
+      negative: >
+        FOXM1 expression varied among glioblastoma patients and appeared higher in
+        patients with shorter survival, though multivariate analysis is pending.
+    decision_rule:
+      accept_if:
+        - Explicit survival correlation stated
+        - Statistical metrics provided (hazard ratio, confidence interval, p-value)
+        - Specific survival outcome (OS, PFS, DFS)
+      reject_if:
+        - Preliminary or underpowered analysis
+        - No statistical validation
+        - Confounded by other variables
+  
+  # Chemical-Chemical Relations
+  synergizes_with:
+    definition: >
+      Chemicals show synergistic effect (combination index <1, specific cancer type/model).
+    examples:
+      positive: >
+        Olaparib synergizes with cisplatin in BRCA-mutant ovarian cancer cells
+        (CI=0.3, p<0.001), enhancing cytotoxicity.
+      negative: >
+        Combining olaparib with cisplatin showed additive effects in ovarian cancer
+        cell lines.
+    decision_rule:
+      accept_if:
+        - Explicit synergy claim with quantitative support
+        - Combination index <1 or statistical evidence of supra-additive effect
+        - Specific cancer type or model system
+      reject_if:
+        - Only additive effect (CI~1)
+        - No quantitative synergy metric
+        - Speculative combination without data
+  
+  overcomes_resistance_with:
+    definition: >
+      Chemical combination overcomes resistance to monotherapy.
+    examples:
+      positive: >
+        Adding trametinib overcame acquired BRAF inhibitor resistance in melanoma
+        cells, restoring sensitivity (IC50 reduced from 5μM to 0.2μM).
+      negative: >
+        Combination therapy showed modest improvement over BRAF inhibitor monotherapy
+        in some resistant cell lines.
+    decision_rule:
+      accept_if:
+        - Clear restoration of sensitivity in resistant context
+        - Quantitative evidence (IC50, viability)
+        - Specific resistance mechanism addressed
+      reject_if:
+        - Only modest or partial effect
+        - No clear resistance context
+        - Speculative without experimental validation
+  
+  sequential_therapy_after:
+    definition: >
+      Chemical B effective after progression on Chemical A.
+    examples:
+      positive: >
+        Osimertinib demonstrated efficacy after progression on first-generation EGFR
+        inhibitors in NSCLC patients with T790M mutations (ORR=71%).
+      negative: >
+        Patients who progressed on erlotinib were subsequently treated with various
+        second-line therapies.
+    decision_rule:
+      accept_if:
+        - Explicit sequential therapy efficacy
+        - Clinical evidence after progression
+        - Specific drugs and indication
+      reject_if:
+        - Only treatment sequencing described without efficacy data
+        - No evidence of effectiveness
+        - Speculative sequence
+  
+  # Gene-Gene Relations
+  physically_interacts_with:
+    definition: >
+      Protein-protein interaction. Specify method of detection and binding affinity if known.
+    examples:
+      positive: >
+        Co-immunoprecipitation confirmed that BRCA1 physically interacts with RAD51
+        (Kd=50nM), essential for homologous recombination.
+      negative: >
+        BRCA1 and RAD51 colocalize at DNA damage sites, suggesting potential interaction.
+    decision_rule:
+      accept_if:
+        - Explicit physical interaction stated
+        - Experimental validation (co-IP, yeast two-hybrid, FRET, etc.)
+        - Binding affinity if available
+      reject_if:
+        - Only colocalization or indirect evidence
+        - Computational prediction without validation
+        - Functional relationship without physical interaction evidence
+  
+  co_expressed_with:
+    definition: >
+      Genes show correlated expression across samples. Include correlation coefficient
+      and context.
+    examples:
+      positive: >
+        ESR1 and PGR expression are highly co-expressed in breast cancer (r=0.85,
+        p<0.001 across TCGA cohort).
+      negative: >
+        ESR1 and PGR are both hormone receptors typically expressed together in
+        breast cancer.
+    decision_rule:
+      accept_if:
+        - Quantitative correlation reported
+        - Statistical validation
+        - Specific sample cohort or context
+      reject_if:
+        - Only qualitative co-expression claim
+        - No statistical support
+        - General knowledge without data
+  
+  synthetic_lethal_with:
+    definition: >
+      Combined inhibition is lethal in specific cancer context. Requires functional
+      validation.
+    examples:
+      positive: >
+        PARP inhibition is synthetic lethal with BRCA1/2 deficiency in ovarian cancer,
+        causing selective cell death in double-deficient cells.
+      negative: >
+        Simultaneous targeting of PARP and BRCA pathway components may represent a
+        therapeutic strategy.
+    decision_rule:
+      accept_if:
+        - Explicit synthetic lethality demonstrated
+        - Functional validation (cell viability, genetic screens)
+        - Specific genetic context
+      reject_if:
+        - Only hypothetical or proposed
+        - No functional evidence
+        - General combinatorial effect
+  
+  # Gene-Pathway Relations
+  activates:
+    definition: >
+      Gene activates pathway. Specify direct/indirect and cancer type where observed.
+    examples:
+      positive: >
+        PI3K activates AKT/mTOR pathway in breast cancer through direct phosphorylation
+        of AKT at Thr308.
+      negative: >
+        PI3K mutations are associated with increased AKT/mTOR pathway activity in
+        breast cancer.
+    decision_rule:
+      accept_if:
+        - Clear activation relationship
+        - Mechanism specified (direct/indirect)
+        - Cancer type and evidence provided
+      reject_if:
+        - Only association without activation claim
+        - No mechanistic detail
+        - Speculative relationship
+  
+  is_essential_for:
+    definition: >
+      Gene required for pathway function in specific context.
+    examples:
+      positive: >
+        ATM is essential for DNA damage response pathway activation, as ATM knockout
+        cells fail to initiate checkpoint signaling.
+      negative: >
+        ATM plays an important role in DNA damage response across multiple cancer types.
+    decision_rule:
+      accept_if:
+        - Explicit essentiality claim
+        - Loss-of-function evidence (knockout, knockdown, inhibitor)
+        - Pathway dysfunction demonstrated
+      reject_if:
+        - Only participation without essentiality
+        - No functional validation
+        - General involvement
+  
+  bypasses:
+    definition: >
+      Gene activation bypasses inhibition of another pathway (resistance mechanism).
+    examples:
+      positive: >
+        MET amplification bypasses EGFR inhibition in NSCLC, reactivating downstream
+        MAPK signaling despite erlotinib treatment.
+      negative: >
+        MET amplification was detected in some EGFR inhibitor-resistant NSCLC tumors.
+    decision_rule:
+      accept_if:
+        - Explicit bypass mechanism described
+        - Functional validation of pathway reactivation
+        - Resistance context specified
+      reject_if:
+        - Only detection of alteration without bypass evidence
+        - No pathway reactivation shown
+        - Speculative mechanism
+  
+  # Chemical-Disease Relations
+  approved_for:
+    definition: >
+      FDA/EMA approved for cancer subtype. Specify line of therapy and combination/monotherapy.
+    examples:
+      positive: >
+        Trastuzumab is FDA-approved for HER2+ metastatic breast cancer as first-line
+        monotherapy or in combination with chemotherapy.
+      negative: >
+        Trastuzumab has shown efficacy in HER2+ breast cancer across multiple clinical
+        trials.
+    decision_rule:
+      accept_if:
+        - Explicit regulatory approval stated (FDA, EMA, etc.)
+        - Specific indication and line of therapy
+        - Approval status confirmed
+      reject_if:
+        - Only clinical trial evidence without approval
+        - Off-label use
+        - Pending approval
+  
+  in_trials_for:
+    definition: >
+      In clinical trials. Specify phase I/II/III and NCT number if available.
+    examples:
+      positive: >
+        Selumetinib is in phase III trials for uveal melanoma (NCT03672305), showing
+        promising progression-free survival benefits.
+      negative: >
+        Selumetinib is being investigated as a potential treatment for uveal melanoma.
+    decision_rule:
+      accept_if:
+        - Active clinical trial status
+        - Trial phase specified
+        - NCT number or trial identifier provided
+      reject_if:
+        - Only preclinical investigation
+        - Completed trials without ongoing development
+        - Speculative future trials
+  
+  resistance_emerges_in:
+    definition: >
+      Resistance commonly emerges in disease. Specify median time to resistance and frequency.
+    examples:
+      positive: >
+        Resistance to osimertinib emerges in EGFR-mutant NSCLC with a median time of
+        18 months, occurring in approximately 70% of patients.
+      negative: >
+        Many EGFR-mutant NSCLC patients eventually develop resistance to osimertinib.
+    decision_rule:
+      accept_if:
+        - Quantitative resistance data (frequency, time to resistance)
+        - Specific disease and drug context
+        - Clinical or experimental evidence
+      reject_if:
+        - Only qualitative statement
+        - No temporal or frequency data
+        - Speculative claim
+  
+  # Chemical-Pathway Relations
+  inhibits:
+    definition: >
+      Chemical inhibits pathway. Include IC50/potency and selectivity.
+    examples:
+      positive: >
+        Trametinib inhibits MEK1/2 in the MAPK pathway with IC50=0.9nM, showing
+        >100-fold selectivity over other kinases.
+      negative: >
+        Trametinib targets the MAPK pathway in melanoma and other cancers.
+    decision_rule:
+      accept_if:
+        - Explicit inhibition stated
+        - Potency metrics (IC50, Ki) provided
+        - Selectivity data when available
+      reject_if:
+        - Only general targeting claim
+        - No potency data
+        - Indirect or downstream effects
+  
+  targets:
+    definition: >
+      Chemical targets multiple nodes in pathway.
+    examples:
+      positive: >
+        Sorafenib targets multiple receptor tyrosine kinases in the VEGF/PDGF signaling
+        pathway, including VEGFR2 (IC50=90nM) and PDGFR-β (IC50=57nM).
+      negative: >
+        Sorafenib affects angiogenesis signaling in hepatocellular carcinoma.
+    decision_rule:
+      accept_if:
+        - Multiple pathway targets specified
+        - Specific nodes or components identified
+        - Potency data for targets
+      reject_if:
+        - Single target only
+        - Only pathway-level effect without specific targets
+        - General or indirect effects
+  
+  # Model-Finding Relations
+  observed_in_cell_line:
+    definition: >
+      Finding observed in specific cell line. Specify drug concentration and time point.
+    examples:
+      positive: >
+        BRCA1 downregulation was observed in MDA-MB-436 cells treated with 10μM
+        olaparib for 72 hours.
+      negative: >
+        This phenomenon was detected in breast cancer cell lines.
+    decision_rule:
+      accept_if:
+        - Specific cell line named
+        - Experimental conditions provided (drug concentration, time)
+        - Clear finding described
+      reject_if:
+        - Only general cell line mention
+        - No experimental detail
+        - Vague finding
+  
+  observed_in_pdx:
+    definition: >
+      Finding observed in patient-derived xenograft model.
+    examples:
+      positive: >
+        Tumor regression was observed in BRCA1-mutant breast cancer PDX models treated
+        with olaparib 50mg/kg daily for 28 days.
+      negative: >
+        PDX models were used to evaluate olaparib efficacy.
+    decision_rule:
+      accept_if:
+        - PDX model explicitly mentioned
+        - Specific finding described
+        - Treatment conditions provided
+      reject_if:
+        - Only model system mentioned without findings
+        - No clear observation
+        - Generic statement
+  
+  observed_in_patient:
+    definition: >
+      Finding observed in patient samples. Include sample size and cancer subtype.
+    examples:
+      positive: >
+        BRCA1 methylation was observed in 23% of triple-negative breast cancer patient
+        samples (n=150), correlating with PARP inhibitor response.
+      negative: >
+        Patient samples showed variable BRCA1 expression patterns.
+    decision_rule:
+      accept_if:
+        - Patient sample analysis specified
+        - Sample size provided
+        - Cancer subtype and finding clearly stated
+      reject_if:
+        - No sample size
+        - Vague observation
+        - No specific finding
+  
+  consistent_across_models:
+    definition: >
+      Finding reproducible across multiple model systems.
+    examples:
+      positive: >
+        PARP inhibitor sensitivity in BRCA1-deficient cells was consistent across
+        5 cell lines, 3 PDX models, and validated in patient cohort (n=87).
+      negative: >
+        Similar results were seen in various experimental models.
+    decision_rule:
+      accept_if:
+        - Multiple model systems specified
+        - Consistency explicitly stated
+        - Models enumerated
+      reject_if:
+        - Single model only
+        - Vague consistency claim
+        - No specific models listed

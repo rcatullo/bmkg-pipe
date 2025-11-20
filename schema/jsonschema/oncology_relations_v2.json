@@ -1,0 +1,53 @@
+{
+  "gene_chemical": {
+    "confers_resistance_to": "Gene/protein mediates resistance to chemical/drug with specified mechanism and context (intrinsic/acquired, cancer type, fold-change)",
+    "sensitizes_to": "Gene/protein increases vulnerability to chemical/drug (include biomarker status if validated)",
+    "predicts_response_to": "Gene status predicts treatment response (specify: FDA-approved/investigational biomarker)"
+  },
+  "mutation_chemical": {
+    "sensitizes_to": "Specific mutation creates vulnerability to chemical/drug (e.g., BRCA1/2 mutations → PARP inhibitor sensitivity)",
+    "confers_resistance_to": "Specific mutation causes drug resistance (e.g., EGFR T790M → gefitinib resistance)",
+    "predicts_response_to": "Mutation status predicts drug response in clinical setting"
+  },
+  "gene_disease": {
+    "prognostic_biomarker_in": "Gene predicts outcome in specific cancer subtype (specify: ER+, TNBC, HER2+, validation level)",
+    "predictive_biomarker_for": "Gene predicts treatment response in cancer subtype (FDA-approved/investigational)",
+    "driver_in": "Gene drives oncogenesis in specific cancer subtype",
+    "tumor_suppressor_in": "Gene suppresses tumorigenesis in specific cancer subtype"
+  },
+  "gene_phenotype": {
+    "upregulated_in_resistance": "Gene upregulated in resistance to specific drug (specify: fold-change, p-value, cell lines tested, acquired vs intrinsic)",
+    "downregulated_in_resistance": "Gene downregulated in resistance to specific drug (specify: fold-change, p-value, cell lines tested)",
+    "correlates_with_survival": "Gene expression correlates with overall/progression-free survival (hazard ratio, p-value)"
+  },
+  "chemical_chemical": {
+    "synergizes_with": "Chemicals show synergistic effect (combination index <1, specific cancer type/model)",
+    "overcomes_resistance_with": "Chemical combination overcomes resistance to monotherapy",
+    "sequential_therapy_after": "Chemical B effective after progression on Chemical A"
+  },
+  "gene_gene": {
+    "physically_interacts_with": "Protein-protein interaction (specify: method of detection, binding affinity if known)",
+    "co_expressed_with": "Genes show correlated expression across samples (correlation coefficient, context)",
+    "synthetic_lethal_with": "Combined inhibition is lethal in specific cancer context"
+  },
+  "gene_pathway": {
+    "activates": "Gene activates pathway (specify: direct/indirect, cancer type where observed)",
+    "is_essential_for": "Gene required for pathway function in specific context",
+    "bypasses": "Gene activation bypasses inhibition of another pathway (resistance mechanism)"
+  },
+  "chemical_disease": {
+    "approved_for": "FDA/EMA approved for cancer subtype (specify: line of therapy, combination/monotherapy)",
+    "in_trials_for": "In clinical trials (specify: phase I/II/III, NCT number if available)",
+    "resistance_emerges_in": "Resistance commonly emerges (specify: median time to resistance, frequency)"
+  },
+  "chemical_pathway": {
+    "inhibits": "Chemical inhibits pathway (IC50/potency, selectivity)",
+    "targets": "Chemical targets multiple nodes in pathway"
+  },
+  "model_finding": {
+    "observed_in_cell_line": "Finding observed in specific cell line (specify: drug concentration, time point)",
+    "observed_in_pdx": "Finding observed in patient-derived xenograft model",
+    "observed_in_patient": "Finding observed in patient samples (sample size, cancer subtype)",
+    "consistent_across_models": "Finding reproducible across multiple model systems"
+  }
+}

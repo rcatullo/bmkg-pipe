@@ -1,0 +1,149 @@
+predicates:
+  # Gene-Chemical / Mutation-Chemical relations
+  confers_resistance_to:
+    biolink: causes
+    ro: RO:0002410        # 'causally related to'
+    description: "Subject mediates resistance to chemical/drug"
+  
+  sensitizes_to:
+    biolink: affects
+    ro: RO:0002263        # 'acts upstream of'
+    description: "Subject increases vulnerability to chemical/drug"
+  
+  predicts_response_to:
+    biolink: correlated_with
+    ro: RO:0002609        # 'related via epidemiology to'
+    description: "Subject status predicts treatment response"
+  
+  # Gene-Disease relations
+  prognostic_biomarker_in:
+    biolink: biomarker_for
+    ro: RO:0002607        # 'is marker for'
+    description: "Subject predicts outcome in specific disease/cancer subtype"
+  
+  predictive_biomarker_for:
+    biolink: biomarker_for
+    ro: RO:0002607        # 'is marker for'
+    description: "Subject predicts treatment response in disease/cancer subtype"
+  
+  driver_in:
+    biolink: contributes_to
+    ro: RO:0002326        # 'contributes to'
+    description: "Subject drives oncogenesis in specific cancer subtype"
+  
+  tumor_suppressor_in:
+    biolink: prevents
+    ro: RO:0002559        # 'prevents'
+    description: "Subject suppresses tumorigenesis in specific cancer subtype"
+  
+  # Gene-Phenotype relations
+  upregulated_in_resistance:
+    biolink: positively_regulates
+    ro: RO:0002213        # 'positively regulates'
+    description: "Subject upregulated in resistance phenotype"
+  
+  downregulated_in_resistance:
+    biolink: negatively_regulates
+    ro: RO:0002212        # 'negatively regulates'
+    description: "Subject downregulated in resistance phenotype"
+  
+  correlates_with_survival:
+    biolink: correlated_with
+    ro: RO:0002610        # 'correlated with'
+    description: "Subject expression correlates with survival outcome"
+  
+  # Chemical-Chemical relations
+  synergizes_with:
+    biolink: interacts_with
+    ro: RO:0002436        # 'molecularly interacts with'
+    description: "Chemicals show synergistic effect"
+  
+  overcomes_resistance_with:
+    biolink: affects
+    ro: RO:0002263        # 'acts upstream of'
+    description: "Chemical combination overcomes resistance"
+  
+  sequential_therapy_after:
+    biolink: temporally_related_to
+    ro: RO:0002410        # 'causally related to'
+    description: "Chemical B effective after progression on Chemical A"
+  
+  # Gene-Gene relations
+  physically_interacts_with:
+    biolink: physically_interacts_with
+    ro: RO:0002436        # 'molecularly interacts with'
+    description: "Protein-protein interaction"
+  
+  co_expressed_with:
+    biolink: coexpressed_with
+    ro: RO:0002610        # 'correlated with'
+    description: "Genes show correlated expression"
+  
+  synthetic_lethal_with:
+    biolink: genetically_interacts_with
+    ro: RO:0002435        # 'genetically interacts with'
+    description: "Combined inhibition is lethal"
+  
+  # Gene-Pathway relations
+  activates:
+    biolink: positively_regulates
+    ro: RO:0002213        # 'positively regulates'
+    description: "Subject activates pathway"
+  
+  is_essential_for:
+    biolink: part_of
+    ro: RO:0002327        # 'enables'
+    description: "Subject required for pathway function"
+  
+  bypasses:
+    biolink: affects
+    ro: RO:0002263        # 'acts upstream of'
+    description: "Subject activation bypasses pathway inhibition"
+  
+  # Chemical-Disease relations
+  approved_for:
+    biolink: treats
+    ro: RO:0002606        # 'treats'
+    description: "FDA/EMA approved for disease/cancer subtype"
+  
+  in_trials_for:
+    biolink: treats
+    ro: RO:0002606        # 'treats'
+    description: "In clinical trials for disease"
+  
+  resistance_emerges_in:
+    biolink: associated_with
+    ro: RO:0002610        # 'correlated with'
+    description: "Resistance commonly emerges in disease"
+  
+  # Chemical-Pathway relations
+  inhibits:
+    biolink: negatively_regulates
+    ro: RO:0002212        # 'negatively regulates'
+    description: "Chemical inhibits pathway"
+  
+  targets:
+    biolink: affects
+    ro: RO:0002263        # 'acts upstream of'
+    description: "Chemical targets pathway nodes"
+  
+  # Model-Finding relations
+  observed_in_cell_line:
+    biolink: has_evidence
+    ro: RO:0002558        # 'has evidence'
+    description: "Finding observed in cell line model"
+  
+  observed_in_pdx:
+    biolink: has_evidence
+    ro: RO:0002558        # 'has evidence'
+    description: "Finding observed in PDX model"
+  
+  observed_in_patient:
+    biolink: has_evidence
+    ro: RO:0002558        # 'has evidence'
+    description: "Finding observed in patient samples"
+  
+  consistent_across_models:
+    biolink: has_evidence
+    ro: RO:0002558        # 'has evidence'
+    description: "Finding reproducible across model systems"

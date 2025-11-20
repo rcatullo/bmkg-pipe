@@ -1,0 +1,284 @@
+id: talazo-kg
+name: TalazoparibResistanceKG
+version: 0.2.0
+default_prefix: TALAZO
+prefixes:
+  BIOLINK: "https://w3id.org/biolink/vocab/"
+  RO: "http://purl.obolibrary.org/obo/RO_"
+  RXNORM: "http://purl.bioontology.org/ontology/RXNORM/"
+  CHEBI: "http://purl.obolibrary.org/obo/CHEBI_"
+  HGNC: "https://identifiers.org/hgnc:"
+  NCBIGene: "https://identifiers.org/ncbigene:"
+  ENSEMBL: "https://identifiers.org/ensembl:"
+  NCIT: "http://purl.obolibrary.org/obo/NCIT_"
+  DOID: "http://purl.obolibrary.org/obo/DOID_"
+  HPO: "http://purl.obolibrary.org/obo/HP_"
+  REACTOME: "https://identifiers.org/reactome:"
+  SO: "http://purl.obolibrary.org/obo/SO_"
+  CLINVAR: "https://www.ncbi.nlm.nih.gov/clinvar/"
+  ECO: "http://purl.obolibrary.org/obo/ECO_"
+  PROV: "http://www.w3.org/ns/prov#"
+
+classes:
+  Gene:
+    is_a: BIOLINK:Gene
+    slots: [symbol, hgnc_id, entrez_id, ensembl_id, aliases]
+    slot_usage:
+      symbol: {required: true}
+  
+  Chemical:
+    is_a: BIOLINK:ChemicalEntity
+    slots: [name, rxnorm_id, chebi_id, drugbank_id, synonyms]
+    slot_usage:
+      name: {required: true}
+  
+  Mutation:
+    is_a: BIOLINK:SequenceVariant
+    slots: [hgvs, rsid, gene_symbol, clinvar_id]
+    slot_usage:
+      hgvs: {required: true}
+  
+  Disease:
+    is_a: BIOLINK:Disease
+    slots: [name, ncit_id, doid, icd10]
+    slot_usage:
+      name: {required: true}
+  
+  Phenotype:
+    is_a: BIOLINK:PhenotypicFeature
+    slots: [name, hpo_id, description]
+    slot_usage:
+      name: {required: true}
+  
+  Pathway:
+    is_a: BIOLINK:Pathway
+    slots: [name, reactome_id, kegg_id, description]
+    slot_usage:
+      name: {required: true}
+  
+  Model:
+    is_a: BIOLINK:PhysiologicalProcess
+    slots: [name, type, description]
+    slot_usage:
+      name: {required: true}
+    enums:
+      type:
+        permissible_values: [cell_line, pdx, patient, organoid, mouse_model, other]
+  
+  Finding:
+    is_a: BIOLINK:ClinicalFinding
+    slots: [description, finding_type, context]
+  
+  Paper:
+    is_a: BIOLINK:Publication
+    slots: [pmid, title, year, journal, doi]
+
+slots:
+  # Gene-Chemical relations
+  confers_resistance_to:
+    is_a: BIOLINK:causes
+    domain: [Gene]
+    range: [Chemical]
+    exact_mappings: [RO:0002410]
+  
+  sensitizes_to:
+    is_a: BIOLINK:affects
+    domain: [Gene, Mutation]
+    range: [Chemical]
+    exact_mappings: [RO:0002263]
+  
+  predicts_response_to:
+    is_a: BIOLINK:correlated_with
+    domain: [Gene, Mutation]
+    range: [Chemical]
+    exact_mappings: [RO:0002609]
+  
+  # Mutation-Chemical relations (shares predicates with Gene-Chemical)
+  # sensitizes_to, confers_resistance_to, predicts_response_to
+  
+  # Gene-Disease relations
+  prognostic_biomarker_in:
+    is_a: BIOLINK:biomarker_for
+    domain: [Gene]
+    range: [Disease]
+    exact_mappings: [RO:0002607]
+  
+  predictive_biomarker_for:
+    is_a: BIOLINK:biomarker_for
+    domain: [Gene]
+    range: [Disease]
+    exact_mappings: [RO:0002607]
+  
+  driver_in:
+    is_a: BIOLINK:contributes_to
+    domain: [Gene]
+    range: [Disease]
+    exact_mappings: [RO:0002326]
+  
+  tumor_suppressor_in:
+    is_a: BIOLINK:prevents
+    domain: [Gene]
+    range: [Disease]
+    exact_mappings: [RO:0002559]
+  
+  # Gene-Phenotype relations
+  upregulated_in_resistance:
+    is_a: BIOLINK:positively_regulates
+    domain: [Gene]
+    range: [Phenotype]
+    exact_mappings: [RO:0002213]
+  
+  downregulated_in_resistance:
+    is_a: BIOLINK:negatively_regulates
+    domain: [Gene]
+    range: [Phenotype]
+    exact_mappings: [RO:0002212]
+  
+  correlates_with_survival:
+    is_a: BIOLINK:correlated_with
+    domain: [Gene]
+    range: [Phenotype]
+    exact_mappings: [RO:0002610]
+  
+  # Chemical-Chemical relations
+  synergizes_with:
+    is_a: BIOLINK:interacts_with
+    domain: [Chemical]
+    range: [Chemical]
+    exact_mappings: [RO:0002436]
+  
+  overcomes_resistance_with:
+    is_a: BIOLINK:affects
+    domain: [Chemical]
+    range: [Chemical]
+    exact_mappings: [RO:0002263]
+  
+  sequential_therapy_after:
+    is_a: BIOLINK:temporally_related_to
+    domain: [Chemical]
+    range: [Chemical]
+    exact_mappings: [RO:0002410]
+  
+  # Gene-Gene relations
+  physically_interacts_with:
+    is_a: BIOLINK:physically_interacts_with
+    domain: [Gene]
+    range: [Gene]
+    exact_mappings: [RO:0002436]
+  
+  co_expressed_with:
+    is_a: BIOLINK:coexpressed_with
+    domain: [Gene]
+    range: [Gene]
+    exact_mappings: [RO:0002610]
+  
+  synthetic_lethal_with:
+    is_a: BIOLINK:genetically_interacts_with
+    domain: [Gene]
+    range: [Gene]
+    exact_mappings: [RO:0002435]
+  
+  # Gene-Pathway relations
+  activates:
+    is_a: BIOLINK:positively_regulates
+    domain: [Gene]
+    range: [Pathway]
+    exact_mappings: [RO:0002213]
+  
+  is_essential_for:
+    is_a: BIOLINK:part_of
+    domain: [Gene]
+    range: [Pathway]
+    exact_mappings: [RO:0002327]
+  
+  bypasses:
+    is_a: BIOLINK:affects
+    domain: [Gene]
+    range: [Pathway]
+    exact_mappings: [RO:0002263]
+  
+  # Chemical-Disease relations
+  approved_for:
+    is_a: BIOLINK:treats
+    domain: [Chemical]
+    range: [Disease]
+    exact_mappings: [RO:0002606]
+  
+  in_trials_for:
+    is_a: BIOLINK:treats
+    domain: [Chemical]
+    range: [Disease]
+    exact_mappings: [RO:0002606]
+  
+  resistance_emerges_in:
+    is_a: BIOLINK:associated_with
+    domain: [Chemical]
+    range: [Disease]
+    exact_mappings: [RO:0002610]
+  
+  # Chemical-Pathway relations
+  inhibits:
+    is_a: BIOLINK:negatively_regulates
+    domain: [Chemical]
+    range: [Pathway]
+    exact_mappings: [RO:0002212]
+  
+  targets:
+    is_a: BIOLINK:affects
+    domain: [Chemical]
+    range: [Pathway]
+    exact_mappings: [RO:0002263]
+  
+  # Model-Finding relations
+  observed_in_cell_line:
+    is_a: BIOLINK:has_evidence
+    domain: [Model]
+    range: [Finding]
+    exact_mappings: [RO:0002558]
+  
+  observed_in_pdx:
+    is_a: BIOLINK:has_evidence
+    domain: [Model]
+    range: [Finding]
+    exact_mappings: [RO:0002558]
+  
+  observed_in_patient:
+    is_a: BIOLINK:has_evidence
+    domain: [Model]
+    range: [Finding]
+    exact_mappings: [RO:0002558]
+  
+  consistent_across_models:
+    is_a: BIOLINK:has_evidence
+    domain: [Model]
+    range: [Finding]
+    exact_mappings: [RO:0002558]
+
+edge_properties:
+  pmid: {type: string, required: true}
+  section: {type: string}
+  sentence_span: {type: array}
+  extractor: {type: string, permissible_values: [LLM, rule, human]}
+  confidence: {type: number, minimum: 0, maximum: 1}
+  eco_code: {type: string}  # Evidence & Conclusion Ontology
+  created_at: {type: string}
+  adjudicated: {type: boolean, default: false}
+  # Additional context fields for oncology relations
+  mechanism: {type: string}
+  cancer_type: {type: string}
+  biomarker_status: {type: string}
+  fold_change: {type: number}
+  p_value: {type: number}
+  hazard_ratio: {type: number}
+  combination_index: {type: number}
+  ic50: {type: number}
+  binding_affinity: {type: number}
+  correlation_coefficient: {type: number}
+  trial_phase: {type: string, permissible_values: [phase_I, phase_II, phase_III, phase_IV]}
+  nct_number: {type: string}
+  line_of_therapy: {type: string}
+  therapy_type: {type: string, permissible_values: [monotherapy, combination]}
+  drug_concentration: {type: string}
+  time_point: {type: string}
+  sample_size: {type: integer}
+  validation_level: {type: string}
