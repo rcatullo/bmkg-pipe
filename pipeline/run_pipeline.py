@@ -11,10 +11,7 @@ if __package__ is None or __package__ == "":
 
 from pipeline.model.llm_client import LLMClient
 from pipeline.utils.pairing import PairGenerator
-from pipeline.named_entity_extraction import (
-    EntityExtractionRunner,
-    EntityExtractor,
-)
+from pipeline.named_entity_recognition import NamedEntityRecognition
 from pipeline.relation_extraction import (
     RelationExtractionRunner,
     RelationExtractor,
@@ -61,11 +58,11 @@ def build_components():
     schema = SchemaLoader()
     llm = LLMClient(config=config)
     normalizer = Normalizer(schema)
-    extractor = EntityExtractor(schema, normalizer, llm)
+    ner = NamedEntityRecognition(schema, normalizer, llm, config)
     pair_generator = PairGenerator(schema)
     relation_extractor = RelationExtractor(schema, llm, config)
     postprocessor = PostProcessor()
-    return extractor, pair_generator, relation_extractor, postprocessor
+    return ner, pair_generator, relation_extractor, postprocessor
 
 
 def main():
@@ -73,7 +70,7 @@ def main():
     configure_logging(config["logging"]["level"])
 
     log_stage("build_components")
-    extractor, pair_generator, relation_extractor, postprocessor = build_components()
+    ner, pair_generator, relation_extractor, postprocessor = build_components()
     log_stage("build_components_complete")
     input_path = Path(config["paths"]["input"])
     log_path = Path(config["paths"]["log"])
@@ -94,16 +91,12 @@ def main():
         llm_client=relation_extractor.llm,
         config=config,
     )
-    entity_runner = EntityExtractionRunner(
-        extractor=extractor,
-        config=config,
-    )
 
     sentences = list(load_sentences(input_path))
     log_stage("entity_queue", sentences=len(sentences))
-    entity_runner.add_sentences(sentences)
-    log_stage("entity_execute", sentences=entity_runner.total_sentences)
-    entity_mapping = entity_runner.run()
+    ner.add_sentences(sentences)
+    log_stage("entity_execute", sentences=ner.total_sentences)
+    entity_mapping = ner.run()
     log_stage("entity_results", sentences=len(entity_mapping))
 
     for sentence in sentences:

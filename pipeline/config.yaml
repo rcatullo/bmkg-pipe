@@ -18,6 +18,6 @@ relation_extraction:
   logging_level: 20
   threshold: 0.55
 
-named_entity_extraction:
+named_entity_recognition:
   max_attempts: 5
   logging_level: 20

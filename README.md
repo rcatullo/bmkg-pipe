@@ -35,7 +35,7 @@ All configurable parameters now live in `pipeline/config.yaml`:
 
 - `paths`: input abstracts, aggregated output, and relation log destinations.
 - `logging.level`: console verbosity.
-- `named_entity_extraction` / `relation_extraction`: request URL, request/result files (`named_entity_extraction/tmp/*.jsonl` and `relation_extraction/tmp/*.jsonl`), throttling, and retry strategy for the shared OpenAI batch processor (`pipeline/utils/api_req_parallel.py`). Both stages always run through the worker—no extra CLI flags required.
+- `named_entity_recognition` / `relation_extraction`: request URL, request/result files (`named_entity_recognition/tmp/*.jsonl` and `relation_extraction/tmp/*.jsonl`), throttling, and retry strategy for the shared OpenAI batch processor (`pipeline/utils/api_req_parallel.py`). Both stages always run through the worker—no extra CLI flags required.
 
 Update the config (and export `OPENAI_API_KEY`) before running `python pipeline/run_pipeline.py`.
 
