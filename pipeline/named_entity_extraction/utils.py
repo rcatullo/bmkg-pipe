@@ -3,12 +3,17 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Dict, Iterable, List, Tuple
+import os
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Tuple
 
 from pipeline.named_entity_extraction.entity_extractor import EntityExtractor
 from pipeline.utils.api_req_parallel import process_api_requests_from_file
-from pipeline.utils.settings import RequestSettings, ensure_dir
-from pipeline.utils.sentence_splitter import Sentence
+from pipeline.utils.utils import ensure_dir, Sentence
+
+PIPELINE_DIR = Path(__file__).resolve().parent.parent
+NER_REQUESTS_FILE = PIPELINE_DIR / "named_entity_extraction" / "tmp" / "requests.jsonl"
+NER_RESULTS_FILE = PIPELINE_DIR / "named_entity_extraction" / "tmp" / "results.jsonl"
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +22,7 @@ class EntityExtractionRunner:
     def __init__(
         self,
         extractor: EntityExtractor,
-        config: RequestSettings,
+        config: Dict[str, Any],
     ) -> None:
         self.extractor = extractor
         self.config = config
@@ -27,10 +32,10 @@ class EntityExtractionRunner:
         self._prepare_request_file()
 
     def _prepare_request_file(self) -> None:
-        ensure_dir(self.config.requests_file)
-        if self.config.requests_file.exists():
-            self.config.requests_file.unlink()
-        self._requests_handle = self.config.requests_file.open("w", encoding="utf-8")
+        ensure_dir(NER_REQUESTS_FILE)
+        if NER_REQUESTS_FILE.exists():
+            NER_REQUESTS_FILE.unlink()
+        self._requests_handle = NER_REQUESTS_FILE.open("w", encoding="utf-8")
 
     def add_sentences(self, sentences: Iterable[Sentence]) -> None:
         for sentence in sentences:
@@ -57,41 +62,41 @@ class EntityExtractionRunner:
             logger.info("No sentences queued for entity extraction; skipping API call.")
             self._clear_results_file()
             return {}
-        if not self.config.api_key:
+        api_key = os.getenv("OPENAI_API_KEY", "")
+        if not api_key:
             raise ValueError(
-                "Entity extraction requires an API key. Configure `named_entity_extraction.api_key` "
-                "in config.yaml or set OPENAI_API_KEY."
+                "Entity extraction requires an API key. Set OPENAI_API_KEY environment variable."
             )
         logger.info(
             "Starting entity extraction for %d sentences using %s",
             self.total_sentences,
-            self.config.request_url,
+            self.config["llm"]["request_url"],
         )
         self._clear_results_file()
-        ensure_dir(self.config.results_file)
+        ensure_dir(NER_RESULTS_FILE)
         asyncio.run(
             process_api_requests_from_file(
-                requests_filepath=str(self.config.requests_file),
-                save_filepath=str(self.config.results_file),
-                request_url=self.config.request_url,
-                api_key=self.config.api_key,
-                max_requests_per_minute=float(self.config.max_requests_per_minute),
-                max_tokens_per_minute=float(self.config.max_tokens_per_minute),
-                token_encoding_name=self.config.token_encoding_name,
-                max_attempts=int(self.config.max_attempts),
-                logging_level=int(self.config.logging_level),
+                requests_filepath=str(NER_REQUESTS_FILE),
+                save_filepath=str(NER_RESULTS_FILE),
+                request_url=self.config["llm"]["request_url"],
+                api_key=api_key,
+                max_requests_per_minute=float(self.config["llm"]["max_requests_per_minute"]),
+                max_tokens_per_minute=float(self.config["llm"]["max_tokens_per_minute"]),
+                token_encoding_name=self.config["llm"]["token_encoding_name"],
+                max_attempts=int(self.config["named_entity_extraction"]["max_attempts"]),
+                logging_level=int(self.config["named_entity_extraction"]["logging_level"]),
             )
         )
         return self._collect_entities()
 
     def _collect_entities(self) -> Dict[Tuple[str, int], List[Dict]]:
         mapping: Dict[Tuple[str, int], List[Dict]] = {}
-        if not self.config.results_file.exists():
+        if not NER_RESULTS_FILE.exists():
             logger.warning(
-                "Entity extraction results file %s not found.", self.config.results_file
+                "Entity extraction results file %s not found.", NER_RESULTS_FILE
             )
             return mapping
-        with self.config.results_file.open("r", encoding="utf-8") as fh:
+        with NER_RESULTS_FILE.open("r", encoding="utf-8") as fh:
             for line in fh:
                 line = line.strip()
                 if not line:
@@ -167,7 +172,7 @@ class EntityExtractionRunner:
             self._requests_handle = None
 
     def _clear_results_file(self) -> None:
-        ensure_dir(self.config.results_file)
-        if self.config.results_file.exists():
-            self.config.results_file.unlink()
+        ensure_dir(NER_RESULTS_FILE)
+        if NER_RESULTS_FILE.exists():
+            NER_RESULTS_FILE.unlink()
 

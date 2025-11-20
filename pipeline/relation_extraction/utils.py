@@ -3,13 +3,19 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Dict, Iterable, List, Optional
+import os
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional
 
 from pipeline.model.llm_client import LLMClient
 from pipeline.utils.pairing import CandidatePair
 from pipeline.relation_extraction.relation_extractor import RelationExtractor
 from pipeline.utils.api_req_parallel import process_api_requests_from_file
-from pipeline.utils.settings import RequestSettings, ensure_dir, timestamp
+from pipeline.utils.utils import ensure_dir, timestamp
+
+PIPELINE_DIR = Path(__file__).resolve().parent.parent
+RELATION_REQUESTS_FILE = PIPELINE_DIR / "relation_extraction" / "tmp" / "requests.jsonl"
+RELATION_RESULTS_FILE = PIPELINE_DIR / "relation_extraction" / "tmp" / "results.jsonl"
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +25,7 @@ class RelationExtractionRunner:
         self,
         extractor: RelationExtractor,
         llm_client: LLMClient,
-        config: RequestSettings,
+        config: Dict[str, Any],
     ) -> None:
         self.extractor = extractor
         self.llm = llm_client
@@ -29,10 +35,10 @@ class RelationExtractionRunner:
         self._prepare_request_file()
 
     def _prepare_request_file(self) -> None:
-        ensure_dir(self.config.requests_file)
-        if self.config.requests_file.exists():
-            self.config.requests_file.unlink()
-        self._requests_handle = self.config.requests_file.open("w", encoding="utf-8")
+        ensure_dir(RELATION_REQUESTS_FILE)
+        if RELATION_REQUESTS_FILE.exists():
+            RELATION_REQUESTS_FILE.unlink()
+        self._requests_handle = RELATION_REQUESTS_FILE.open("w", encoding="utf-8")
 
     def add_pairs(self, pairs: Iterable[CandidatePair]) -> None:
         if not pairs:
@@ -57,9 +63,9 @@ class RelationExtractionRunner:
             "subject": pair.subject,
             "object": pair.obj,
             "predicate_names": [pred.name for pred in pair.predicates],
-            "model_name": self.extractor.settings.llm_model,
-            "model_version": self.extractor.settings.model_version,
-            "prompt_version": self.extractor.settings.prompt_version,
+            "model_name": self.extractor.config["llm"]["model"],
+            "model_version": self.extractor.config.get("model_version", "v1"),
+            "prompt_version": self.extractor.config.get("prompt_version", "v1"),
         }
 
     def run(self) -> List[Dict]:
@@ -68,39 +74,39 @@ class RelationExtractionRunner:
             logger.info("No candidate pairs queued for relation extraction; skipping API call.")
             self._clear_results_file()
             return []
-        if not self.config.api_key:
+        api_key = os.getenv("OPENAI_API_KEY", "")
+        if not api_key:
             raise ValueError(
-                "Relation extraction requires an API key. Configure `relation_extraction.api_key` "
-                "in config.yaml or set OPENAI_API_KEY."
+                "Relation extraction requires an API key. Set OPENAI_API_KEY environment variable."
             )
         logger.info(
             "Starting relation extraction for %d pairs using %s",
             self.total_pairs,
-            self.config.request_url,
+            self.config["llm"]["request_url"],
         )
         self._clear_results_file()
-        ensure_dir(self.config.results_file)
+        ensure_dir(RELATION_RESULTS_FILE)
         asyncio.run(
             process_api_requests_from_file(
-                requests_filepath=str(self.config.requests_file),
-                save_filepath=str(self.config.results_file),
-                request_url=self.config.request_url,
-                api_key=self.config.api_key,
-                max_requests_per_minute=float(self.config.max_requests_per_minute),
-                max_tokens_per_minute=float(self.config.max_tokens_per_minute),
-                token_encoding_name=self.config.token_encoding_name,
-                max_attempts=int(self.config.max_attempts),
-                logging_level=int(self.config.logging_level),
+                requests_filepath=str(RELATION_REQUESTS_FILE),
+                save_filepath=str(RELATION_RESULTS_FILE),
+                request_url=self.config["llm"]["request_url"],
+                api_key=api_key,
+                max_requests_per_minute=float(self.config["llm"]["max_requests_per_minute"]),
+                max_tokens_per_minute=float(self.config["llm"]["max_tokens_per_minute"]),
+                token_encoding_name=self.config["llm"]["token_encoding_name"],
+                max_attempts=int(self.config["relation_extraction"]["max_attempts"]),
+                logging_level=int(self.config["relation_extraction"]["logging_level"]),
             )
         )
         return self._read_results()
 
     def _read_results(self) -> List[Dict]:
         results: List[Dict] = []
-        if not self.config.results_file.exists():
-            logger.warning("Relation extraction results file %s not found.", self.config.results_file)
+        if not RELATION_RESULTS_FILE.exists():
+            logger.warning("Relation extraction results file %s not found.", RELATION_RESULTS_FILE)
             return results
-        with self.config.results_file.open("r", encoding="utf-8") as fh:
+        with RELATION_RESULTS_FILE.open("r", encoding="utf-8") as fh:
             for line in fh:
                 line = line.strip()
                 if not line:
@@ -199,7 +205,7 @@ class RelationExtractionRunner:
             self._requests_handle = None
 
     def _clear_results_file(self) -> None:
-        ensure_dir(self.config.results_file)
-        if self.config.results_file.exists():
-            self.config.results_file.unlink()
+        ensure_dir(RELATION_RESULTS_FILE)
+        if RELATION_RESULTS_FILE.exists():
+            RELATION_RESULTS_FILE.unlink()
 

@@ -6,14 +6,14 @@ from typing import Any, Dict, Optional
 
 from openai import OpenAI
 
-from pipeline.utils.settings import Settings, load_settings
+from pipeline.utils.utils import load_config
 
 logger = logging.getLogger(__name__)
 
 
 class LLMClient:
-    def __init__(self, settings: Optional[Settings] = None):
-        self.settings = settings or load_settings()
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        self.config = config or load_config()
         self.client = OpenAI()
 
     def build_chat_completion_kwargs(
@@ -23,7 +23,7 @@ class LLMClient:
         json_mode: bool = False,
     ) -> Dict[str, Any]:
         kwargs: Dict[str, Any] = {
-            "model": self.settings.llm_model,
+            "model": self.config["llm"]["model"],
             "messages": [
                 {"role": "system", "content": "You are a biomedical relation extraction assistant."},
                 {"role": "user", "content": prompt},
@@ -48,7 +48,7 @@ class LLMClient:
         )
         logger.debug(
             "LLM request model=%s json_mode=%s temperature=%s prompt=%s",
-            self.settings.llm_model,
+            self.config["llm"]["model"],
             json_mode,
             temperature,
             prompt,
@@ -62,7 +62,7 @@ class LLMClient:
         content = message.content or ""
         logger.debug(
             "LLM response model=%s json_mode=%s text=%s",
-            self.settings.llm_model,
+            self.config["llm"]["model"],
             json_mode,
             content,
         )

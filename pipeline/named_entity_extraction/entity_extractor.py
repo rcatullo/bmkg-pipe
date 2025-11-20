@@ -5,7 +5,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 from pipeline.model.llm_client import LLMClient
 from pipeline.schema.loader import SchemaLoader
 from pipeline.schema.normalizer import Normalizer
-from pipeline.utils.sentence_splitter import Sentence
+from pipeline.utils.utils import Sentence
 
 logger = logging.getLogger(__name__)
 

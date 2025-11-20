@@ -1,10 +1,10 @@
 import logging
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from pipeline.model.llm_client import LLMClient
 from pipeline.utils.pairing import CandidatePair
 from pipeline.schema.loader import SchemaLoader
-from pipeline.utils.settings import Settings, load_settings, timestamp
+from pipeline.utils.utils import load_config, timestamp
 
 logger = logging.getLogger(__name__)
 
@@ -14,11 +14,11 @@ class RelationExtractor:
         self,
         schema: SchemaLoader,
         llm_client: Optional[LLMClient] = None,
-        settings: Optional[Settings] = None,
+        config: Optional[Dict[str, Any]] = None,
     ) -> None:
         self.schema = schema
-        self.llm = llm_client or LLMClient()
-        self.settings = settings or load_settings()
+        self.config = config or load_config()
+        self.llm = llm_client or LLMClient(config=self.config)
 
     def extract(self, pair: CandidatePair) -> Optional[Dict]:
         prompt = self.build_prompt(pair)
@@ -45,9 +45,9 @@ class RelationExtractor:
             "object": pair.obj,
             "predicate": predicate,
             "confidence": confidence,
-            "model_name": self.settings.llm_model,
-            "model_version": self.settings.model_version,
-            "prompt_version": self.settings.prompt_version,
+            "model_name": self.config["llm"]["model"],
+            "model_version": self.config.get("model_version", "v1"),
+            "prompt_version": self.config.get("prompt_version", "v1"),
             "timestamp": timestamp(),
             "explanation": result.get("explanation", ""),
         }

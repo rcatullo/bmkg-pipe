@@ -1,7 +1,9 @@
 llm:
   model: "gpt-5-nano-2025-08-07"
-
-threshold: 0.55
+  max_requests_per_minute: 1500
+  max_tokens_per_minute: 125000
+  request_url: "https://api.openai.com/v1/chat/completions"
+  token_encoding_name: "cl100k_base"
 
 paths:
   input: "data/pubmed_talazoparib.jsonl"
@@ -12,21 +14,10 @@ logging:
   level: "INFO"
 
 relation_extraction:
-  request_url: "https://api.openai.com/v1/chat/completions"
-  requests_file: "relation_extraction/tmp/requests.jsonl"
-  results_file: "relation_extraction/tmp/results.jsonl"
-  max_requests_per_minute: 1500
-  max_tokens_per_minute: 125000
-  token_encoding_name: "cl100k_base"
   max_attempts: 5
   logging_level: 20
+  threshold: 0.55
 
 named_entity_extraction:
-  request_url: "https://api.openai.com/v1/chat/completions"
-  requests_file: "named_entity_extraction/tmp/requests.jsonl"
-  results_file: "named_entity_extraction/tmp/results.jsonl"
-  max_requests_per_minute: 1500
-  max_tokens_per_minute: 125000
-  token_encoding_name: "cl100k_base"
   max_attempts: 5
   logging_level: 20
