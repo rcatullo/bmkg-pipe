@@ -109,7 +109,6 @@ class RelationExtraction:
                 token_encoding_name=self.config["llm"]["token_encoding_name"],
                 max_attempts=int(self.config["relation_extraction"]["max_attempts"]),
                 logging_level=int(self.config["logging"]["logging_level"]),
-                max_in_flight=int(self.config["llm"].get("max_in_flight", 25)),
             )
         )
         return self._read_results()
