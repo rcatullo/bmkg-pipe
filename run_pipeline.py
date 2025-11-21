@@ -24,11 +24,11 @@ def configure_logging(config: Dict[str, Any]) -> None:
     root = logging.getLogger()
     for handler in list(root.handlers):
         root.removeHandler(handler)
-    root.setLevel(logging.DEBUG)
+    root.setLevel(getattr(logging, config["logging"]["level"].upper(), logging.INFO))
     formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
     file_handler = logging.FileHandler(log_path, encoding="utf-8")
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(getattr(logging, config["logging"]["level"].upper(), logging.INFO))
     file_handler.setFormatter(formatter)
     root.addHandler(file_handler)
 
