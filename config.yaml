@@ -23,3 +23,7 @@ relation_extraction:
 
 named_entity_recognition:
   max_attempts: 5
+
+umls:
+  api_key: "8a8c8ead-cf26-40e9-986e-08b358bd9ad7"
+  api_url: "https://uts-ws.nlm.nih.gov/rest"

@@ -127,12 +127,12 @@ def efetch_records(ids: List[str], batch_size: int, max_records: Optional[int] =
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--query", default="talazoparib resistance")
+    parser.add_argument("--query", default=None, help="Single query to use (overrides default multi-query)")
     parser.add_argument("--years", type=int, default=5)
     parser.add_argument("--esearch-batch", type=int, default=100)
     parser.add_argument("--efetch-batch", type=int, default=20)
     parser.add_argument("--output", default="data/pubmed_talazoparib.jsonl")
-    parser.add_argument("--max-articles", type=int, default=None, help="Maximum number of PubMed articles to fetch")
+    parser.add_argument("--max-articles-per-query", type=int, default=10, help="Maximum articles per query")
     args = parser.parse_args()
 
     today = dt.date.today()
@@ -140,21 +140,84 @@ def main():
     mindate = start_date.strftime("%Y/%m/%d")
     maxdate = today.strftime("%Y/%m/%d")
 
-    ids = esearch_ids(args.query, mindate, maxdate, args.esearch_batch, args.max_articles)
+    if args.query:
+        queries = [args.query]
+    else:
+        queries = [
+            "PARP inhibitor resistance mechanisms",
+            "biomarker predicts response targeted therapy",
+            "drug combination synergy cancer",
+            "driver mutation oncogene cancer",
+            "pathway inhibition targeted therapy",
+            "synthetic lethality PARP BRCA",
+            "FDA approval cancer drug",
+            "gene expression chemotherapy resistance",
+            "tumor suppressor mutation cancer",
+            "drug overcomes resistance combination",
+        ]
+
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     seen_pmids = set()
     num_written = 0
+    
     with output_path.open("w", encoding="utf-8") as fh:
-        for record in efetch_records(ids, args.efetch_batch, args.max_articles):
-            pmid = record.get("pmid")
-            if not pmid or pmid in seen_pmids:
-                continue
-            seen_pmids.add(pmid)
-            fh.write(json.dumps(record) + "\n")
-            num_written += 1
-            if args.max_articles is not None and num_written >= args.max_articles:
-                break
+        for query in queries:
+            print(f"Fetching articles for query: {query}")
+            query_count = 0
+            all_ids = []
+            retstart = 0
+            max_fetch = args.max_articles_per_query * 3
+            
+            while len(all_ids) < max_fetch:
+                params = {
+                    "db": "pubmed",
+                    "term": query,
+                    "retmode": "xml",
+                    "retmax": args.esearch_batch,
+                    "retstart": retstart,
+                    "datetype": "pdat",
+                    "mindate": mindate,
+                    "maxdate": maxdate,
+                }
+                resp = requests.get(f"{EUTILS_BASE}esearch.fcgi", params=params, timeout=30)
+                resp.raise_for_status()
+                root = ET.fromstring(resp.content)
+                batch_ids = [elem.text for elem in root.findall(".//IdList/Id") if elem.text]
+                
+                if not batch_ids:
+                    break
+                
+                all_ids.extend(batch_ids)
+                retstart += len(batch_ids)
+                
+                if len(batch_ids) < args.esearch_batch:
+                    break
+                
+                time.sleep(0.34)
+            
+            print(f"  Found {len(all_ids)} article IDs, fetching records...")
+            
+            for record in efetch_records(all_ids, args.efetch_batch, None):
+                if query_count >= args.max_articles_per_query:
+                    break
+                
+                pmid = record.get("pmid")
+                if not pmid or pmid in seen_pmids:
+                    continue
+                
+                abstract = record.get("abstract", "").strip()
+                if not abstract:
+                    continue
+                
+                seen_pmids.add(pmid)
+                fh.write(json.dumps(record) + "\n")
+                num_written += 1
+                query_count += 1
+            
+            print(f"  Wrote {query_count} articles with abstracts")
+    
+    print(f"Total articles written: {num_written}")
 
 
 if __name__ == "__main__":

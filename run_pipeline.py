@@ -50,10 +50,15 @@ def build_components():
     config = utils.load_config()
     schema = SchemaLoader()
     llm = LLMClient(config=config)
-    normalizer = Normalizer(schema)
+    from model.umls_client import UMLSClient
+    umls = UMLSClient(
+        api_key=config.get("umls", {}).get("api_key", ""),
+        api_url=config.get("umls", {}).get("api_url", "https://uts-ws.nlm.nih.gov/rest"),
+    )
+    normalizer = Normalizer(schema, llm_client=llm, umls_client=umls)
     ner = NamedEntityRecognition(schema, normalizer, llm, config)
     pair_generator = PairGenerator(schema)
-    re = RelationExtraction(llm, config)
+    re = RelationExtraction(llm, config, schema=schema)
     postprocessor = PostProcessor()
     return ner, pair_generator, re, postprocessor
 

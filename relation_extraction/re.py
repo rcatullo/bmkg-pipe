@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
 from model.llm_client import LLMClient
+from schema import SchemaLoader
 from utils.api_req_parallel import process_api_requests_from_file
 from utils import ensure_dir, timestamp, CandidatePair
 
@@ -23,9 +24,11 @@ class RelationExtraction:
         self,
         llm_client: LLMClient,
         config: Dict[str, Any],
+        schema: SchemaLoader | None = None,
     ) -> None:
         self.llm = llm_client
         self.config = config
+        self.schema = schema or SchemaLoader()
         self.total_pairs = 0
         self._requests_handle = None
         self._prepare_request_file()
@@ -39,17 +42,49 @@ class RelationExtraction:
     def _build_prompt(self, pair: CandidatePair) -> str:
         subject = pair.subject.get("text")
         obj = pair.obj.get("text")
-        allowed = "\n".join(
-            f"- {pred.name}: {pred.description[:140]}"
-            for pred in pair.predicates
-        )
         sentence = pair.sentence.replace(subject, f"[SUBJ]{subject}[/SUBJ]", 1)
         sentence = sentence.replace(obj, f"[OBJ]{obj}[/OBJ]", 1)
+        
+        guidelines = self.schema.guidelines
+        predicate_sections = []
+        warnings = []
+        
+        for pred in pair.predicates:
+            guideline = guidelines.get(pred.name, {})
+            definition = guideline.get("definition", pred.description)
+            warning = guideline.get("warning", "")
+            examples = guideline.get("examples", {})
+            decision_rule = guideline.get("decision_rule", {})
+            
+            if warning:
+                warnings.append(f"⚠️ {pred.name}: {warning}")
+            
+            section = f"{pred.name}:\n"
+            section += f"{definition}\n"
+            
+            if examples.get("positive"):
+                section += f"✓ {examples['positive']}\n"
+            if examples.get("negative"):
+                section += f"✗ {examples['negative']}\n"
+            
+            reject_rules = decision_rule.get("reject_if", [])
+            if reject_rules:
+                section += "REJECT if: " + "; ".join(reject_rules[:3]) + "\n"
+            
+            accept_rules = decision_rule.get("accept_if", [])
+            if accept_rules:
+                section += "ACCEPT if: " + "; ".join(accept_rules[:3]) + "\n"
+            
+            predicate_sections.append(section)
+        
+        warnings_text = "\n".join(warnings) + "\n\n" if warnings else ""
+        predicates_text = "\n\n".join(predicate_sections)
+        
         return (
-            "Determine which predicate (if any) fits the sentence and give a very short explanation.\n"
-            f"Sentence: {sentence}\n"
-            f"Allowed predicates:\n{allowed}\n"
-            "Respond as JSON {predicate: str, confidence: float, explanation: str}."
+            f"Sentence: {sentence}\n\n"
+            f"{warnings_text}"
+            f"Predicates:\n{predicates_text}\n\n"
+            "JSON: {predicate: str, confidence: float}. If none fit, predicate=null, confidence=0.0."
         )
 
     def add_pairs(self, pairs: Iterable[CandidatePair]) -> None:
@@ -186,6 +221,8 @@ class RelationExtraction:
             )
             return None
         predicate = result.get("predicate")
+        if predicate is None or predicate == "null":
+            return None
         allowed = metadata.get("predicate_names", [])
         if predicate not in allowed:
             logger.debug(
@@ -208,7 +245,6 @@ class RelationExtraction:
             "model_version": metadata.get("model_version"),
             "prompt_version": metadata.get("prompt_version"),
             "timestamp": timestamp(),
-            "explanation": result.get("explanation", ""),
         }
 
     def _close_request_file(self) -> None:

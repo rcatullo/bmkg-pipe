@@ -18,43 +18,50 @@ prefixes:
   CLINVAR: "https://www.ncbi.nlm.nih.gov/clinvar/"
   ECO: "http://purl.obolibrary.org/obo/ECO_"
   PROV: "http://www.w3.org/ns/prov#"
+  UMLS: "https://identifiers.org/umls:"
 
 classes:
   Gene:
     is_a: BIOLINK:Gene
-    slots: [symbol, hgnc_id, entrez_id, ensembl_id, aliases]
+    slots: [symbol, hgnc_id, entrez_id, ensembl_id, aliases, umls_cui]
     slot_usage:
       symbol: {required: true}
+      umls_cui: {required: true}
   
   Chemical:
     is_a: BIOLINK:ChemicalEntity
-    slots: [name, rxnorm_id, chebi_id, drugbank_id, synonyms]
+    slots: [name, rxnorm_id, chebi_id, drugbank_id, synonyms, umls_cui]
     slot_usage:
       name: {required: true}
+      umls_cui: {required: true}
   
   Mutation:
     is_a: BIOLINK:SequenceVariant
-    slots: [hgvs, rsid, gene_symbol, clinvar_id]
+    slots: [hgvs, rsid, gene_symbol, clinvar_id, umls_cui]
     slot_usage:
       hgvs: {required: true}
+      umls_cui: {required: true}
   
   Disease:
     is_a: BIOLINK:Disease
-    slots: [name, ncit_id, doid, icd10]
+    slots: [name, ncit_id, doid, icd10, umls_cui]
     slot_usage:
       name: {required: true}
+      umls_cui: {required: true}
   
   Phenotype:
     is_a: BIOLINK:PhenotypicFeature
-    slots: [name, hpo_id, description]
+    slots: [name, hpo_id, description, umls_cui]
     slot_usage:
       name: {required: true}
+      umls_cui: {required: true}
   
   Pathway:
     is_a: BIOLINK:Pathway
-    slots: [name, reactome_id, kegg_id, description]
+    slots: [name, reactome_id, kegg_id, description, umls_cui]
     slot_usage:
       name: {required: true}
+      umls_cui: {required: true}
   
   Model:
     is_a: BIOLINK:PhysiologicalProcess

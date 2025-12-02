@@ -316,19 +316,29 @@ annotation_guideline:
     definition: >
       Combined inhibition is lethal in specific cancer context. Requires functional
       validation.
+    warning: >
+      ⚠️ CRITICAL: For gene-gene relations, sentence MUST explicitly state "synthetic lethal",
+      "synthetic lethality", or "synthetically lethal". Listing genes together (e.g., "BRCA1/2,
+      CDK12, and PALB2") does NOT indicate synthetic lethality. If sentence only lists genes
+      without explicit synthetic lethality language, REJECT this predicate.
     examples:
       positive: >
         PARP inhibition is synthetic lethal with BRCA1/2 deficiency in ovarian cancer,
         causing selective cell death in double-deficient cells.
       negative: >
+        Mutations in BRCA1/2, CDK12, and PALB2 predict PARPi response. (Lists genes together,
+        no explicit synthetic lethality stated - REJECT)
+      negative: >
         Simultaneous targeting of PARP and BRCA pathway components may represent a
         therapeutic strategy.
     decision_rule:
       accept_if:
+        - Sentence explicitly contains "synthetic lethal", "synthetic lethality", or "synthetically lethal"
         - Explicit synthetic lethality demonstrated
         - Functional validation (cell viability, genetic screens)
         - Specific genetic context
       reject_if:
+        - Genes listed together without explicit synthetic lethality language
         - Only hypothetical or proposed
         - No functional evidence
         - General combinatorial effect
@@ -455,18 +465,29 @@ annotation_guideline:
   inhibits:
     definition: >
       Chemical inhibits pathway. Include IC50/potency and selectivity.
+    warning: >
+      ⚠️ CRITICAL: Do NOT extract if sentence contains "exploit vulnerability", "in patients with
+      alterations", "genes involved in", "HRR", or enumeration patterns ("including X, Y, and Z")
+      unless sentence explicitly states "inhibits", "blocks", "antagonist", or "suppresses" near
+      the subject. Sentences about exploiting vulnerabilities in pathways are NOT inhibition.
     examples:
       positive: >
         Trametinib inhibits MEK1/2 in the MAPK pathway with IC50=0.9nM, showing
         >100-fold selectivity over other kinases.
       negative: >
+        PARP inhibitors exploit a vulnerability in the DNA repair system in patients with
+        alterations in genes involved in homologous recombination. (Exploits vulnerability,
+        not direct inhibition - REJECT)
+      negative: >
         Trametinib targets the MAPK pathway in melanoma and other cancers.
     decision_rule:
       accept_if:
-        - Explicit inhibition stated
+        - Sentence explicitly states "inhibits", "blocks", "antagonist", or "suppresses"
         - Potency metrics (IC50, Ki) provided
         - Selectivity data when available
       reject_if:
+        - Sentence contains "exploit vulnerability" or "in patients with alterations" patterns
+        - Enumeration patterns ("including X, Y, and Z") without explicit inhibition language
         - Only general targeting claim
         - No potency data
         - Indirect or downstream effects

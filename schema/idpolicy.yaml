@@ -1,22 +1,22 @@
 id_policy:
   Gene:
-    primary: hgnc_id
-    alternates: [entrez_id, ensembl_id]
+    primary: umls_cui
+    alternates: [hgnc_id, entrez_id, ensembl_id]
   Chemical:
-    primary: rxnorm_id
-    alternates: [chebi_id, drugbank_id]
+    primary: umls_cui
+    alternates: [rxnorm_id, chebi_id, drugbank_id]
   Mutation:
-    primary: hgvs
-    alternates: [rsid, clinvar_id]
+    primary: umls_cui
+    alternates: [hgvs, rsid, clinvar_id]
   Disease:
-    primary: ncit_id
-    alternates: [doid, icd10]
+    primary: umls_cui
+    alternates: [ncit_id, doid, icd10]
   Phenotype:
-    primary: hpo_id
-    alternates: []
+    primary: umls_cui
+    alternates: [hpo_id]
   Pathway:
-    primary: reactome_id
-    alternates: [kegg_id]
+    primary: umls_cui
+    alternates: [reactome_id, kegg_id]
   Model:
     primary: name
     alternates: []

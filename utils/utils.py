@@ -109,7 +109,6 @@ class PostProcessor:
                     "pmid": res["pmid"],
                     "sentence_id": res["sentence_id"],
                     "sentence": res["sentence"],
-                    "explanation": res.get("explanation", ""),
                 }
             )
         aggregated = []
