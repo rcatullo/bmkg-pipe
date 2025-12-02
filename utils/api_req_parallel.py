@@ -117,7 +117,6 @@ async def process_api_requests_from_file(
     token_encoding_name: str,
     max_attempts: int,
     logging_level: int,
-    max_in_flight: int,
 ):
     """Processes API requests in parallel, throttling to stay under rate limits."""
     # constants
@@ -148,8 +147,8 @@ async def process_api_requests_from_file(
     next_request = None  # variable to hold the next request to call
 
     # initialize available capacity counts
-    available_request_capacity = 0
-    available_token_capacity = 0
+    available_request_capacity = max_requests_per_minute
+    available_token_capacity = max_tokens_per_minute
     last_update_time = time.time()
 
     # initialize flags
@@ -162,22 +161,6 @@ async def process_api_requests_from_file(
         requests = file.__iter__()
         logging.debug(f"File opened. Entering main loop")
         async with aiohttp.ClientSession() as session:  # Initialize ClientSession here
-            in_flight_tasks = 0
-
-            async def run_request(request: "APIRequest"):
-                nonlocal in_flight_tasks
-                try:
-                    await request.call_api(
-                        session=session,
-                        request_url=request_url,
-                        request_header=request_header,
-                        retry_queue=queue_of_requests_to_retry,
-                        save_filepath=save_filepath,
-                        status_tracker=status_tracker,
-                    )
-                finally:
-                    in_flight_tasks -= 1
-
             while True:
                 # get next request (if one is not already waiting for capacity)
                 if next_request is None:
@@ -230,16 +213,23 @@ async def process_api_requests_from_file(
                     if (
                         available_request_capacity >= 1
                         and available_token_capacity >= next_request_tokens
-                        and in_flight_tasks < max_in_flight
                     ):
                         # update counters
                         available_request_capacity -= 1
                         available_token_capacity -= next_request_tokens
                         next_request.attempts_left -= 1
-                        in_flight_tasks += 1
 
                         # call API
-                        asyncio.create_task(run_request(next_request))
+                        asyncio.create_task(
+                            next_request.call_api(
+                                session=session,
+                                request_url=request_url,
+                                request_header=request_header,
+                                retry_queue=queue_of_requests_to_retry,
+                                save_filepath=save_filepath,
+                                status_tracker=status_tracker,
+                            )
+                        )
                         next_request = None  # reset next_request to empty
 
                 # if all tasks are finished, break
@@ -476,7 +466,6 @@ if __name__ == "__main__":
     parser.add_argument("--token_encoding_name", default="cl100k_base")
     parser.add_argument("--max_attempts", type=int, default=5)
     parser.add_argument("--logging_level", default=logging.INFO)
-    parser.add_argument("--max_in_flight", type=int, default=25)
     args = parser.parse_args()
 
     if args.save_filepath is None:
@@ -494,7 +483,6 @@ if __name__ == "__main__":
             token_encoding_name=args.token_encoding_name,
             max_attempts=int(args.max_attempts),
             logging_level=int(args.logging_level),
-            max_in_flight=int(args.max_in_flight),
         )
     )
 

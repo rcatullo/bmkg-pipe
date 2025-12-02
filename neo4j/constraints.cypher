@@ -1,0 +1,33 @@
+// One unique id per class you care about
+
+CREATE CONSTRAINT chemical_id IF NOT EXISTS
+FOR (c:Chemical)
+REQUIRE c.id IS UNIQUE;
+
+CREATE CONSTRAINT gene_id IF NOT EXISTS
+FOR (g:Gene)
+REQUIRE g.id IS UNIQUE;
+
+CREATE CONSTRAINT mutation_id IF NOT EXISTS
+FOR (m:Mutation)
+REQUIRE m.id IS UNIQUE;
+
+CREATE CONSTRAINT disease_id IF NOT EXISTS
+FOR (d:Disease)
+REQUIRE d.id IS UNIQUE;
+
+CREATE CONSTRAINT phenotype_id IF NOT EXISTS
+FOR (p:Phenotype)
+REQUIRE p.id IS UNIQUE;
+
+CREATE CONSTRAINT pathway_id IF NOT EXISTS
+FOR (p:Pathway)
+REQUIRE p.id IS UNIQUE;
+
+CREATE CONSTRAINT model_id IF NOT EXISTS
+FOR (m:Model)
+REQUIRE m.id IS UNIQUE;
+
+CREATE CONSTRAINT finding_id IF NOT EXISTS
+FOR (f:Finding)
+REQUIRE f.id IS UNIQUE;

@@ -7,14 +7,14 @@ import os
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
 
-from pipeline.model.llm_client import LLMClient
-from pipeline.schema import SchemaLoader, Normalizer
-from pipeline.utils.api_req_parallel import process_api_requests_from_file
-from pipeline.utils import ensure_dir, Sentence
+from model.llm_client import LLMClient
+from schema import SchemaLoader, Normalizer
+from utils.api_req_parallel import process_api_requests_from_file
+from utils import ensure_dir, Sentence
 
-PIPELINE_DIR = Path(__file__).resolve().parent.parent
-NER_REQUESTS_FILE = PIPELINE_DIR / "named_entity_recognition" / "tmp" / "requests.jsonl"
-NER_RESULTS_FILE = PIPELINE_DIR / "named_entity_recognition" / "tmp" / "results.jsonl"
+ROOT_DIR = Path(__file__).resolve().parent.parent
+NER_REQUESTS_FILE = ROOT_DIR / "named_entity_recognition" / "tmp" / "requests.jsonl"
+NER_RESULTS_FILE = ROOT_DIR / "named_entity_recognition" / "tmp" / "results.jsonl"
 
 logger = logging.getLogger(__name__)
 
@@ -66,8 +66,17 @@ class NamedEntityRecognition:
         class_list = ", ".join(self.classes)
         return (
             "Identify biomedical entities for the sentence below (if any). If the entity doesn't fit confidently into one of the given classes, even if it is biomedical in nature, omit it.\n"
-            f"Classes: {class_list}.\n"
-            "Return JSON with `entities`: [{text,class,start,end,ids}].\n"
+            f"Classes: {class_list}.\n\n"
+            "For each entity, also normalize it to its most appropriate canonical form for UMLS database search. "
+            "Convert to the standard canonical form that would be found in medical databases. Consider:\n"
+            "- Gene symbols should use official HGNC notation (e.g., \"p53\" → \"TP53\")\n"
+            "- Diseases should use standard medical terminology (e.g., \"breast cancer\" → \"breast neoplasms\")\n"
+            "- Chemicals should use standard chemical names (e.g., \"aspirin\" → \"acetylsalicylic acid\")\n"
+            "- Proteins should use standard protein names\n"
+            "- Resolve abbreviations and synonyms to canonical forms\n\n"
+            "If the entity is already in canonical form or no normalization is needed, use the original text as the canonical form.\n"
+            "If the entity cannot be normalized, set canonical_form to null.\n\n"
+            "Return JSON with `entities`: [{text, class, start, end, ids, canonical_form}].\n"
             f"Sentence: {sentence.text}"
         )
 
@@ -100,7 +109,6 @@ class NamedEntityRecognition:
                 token_encoding_name=self.config["llm"]["token_encoding_name"],
                 max_attempts=int(self.config["named_entity_recognition"]["max_attempts"]),
                 logging_level=int(self.config["logging"]["logging_level"]),
-                max_in_flight=int(self.config["llm"].get("max_in_flight", 25)),
             )
         )
         return self._collect_entities()
@@ -179,7 +187,12 @@ class NamedEntityRecognition:
                 content,
             )
             return []
-        return [self.normalizer.normalize(e) for e in payload.get("entities", [])]
+        entities = payload.get("entities", [])
+        normalized = []
+        for e in entities:
+            normalized_entity = self.normalizer.normalize(e, context=sentence.text)
+            normalized.append(normalized_entity)
+        return normalized
 
     def _close_request_file(self) -> None:
         if self._requests_handle is not None:

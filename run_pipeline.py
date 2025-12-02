@@ -4,16 +4,16 @@ from pathlib import Path
 from typing import Any, Dict
 
 if __package__ is None or __package__ == "":
-    ROOT = Path(__file__).resolve().parents[1]
+    ROOT = Path(__file__).resolve().parent
     if str(ROOT) not in sys.path:
         sys.path.append(str(ROOT))
 
-from pipeline.model.llm_client import LLMClient
-from pipeline.named_entity_recognition import NamedEntityRecognition
-from pipeline.relation_extraction import RelationExtraction
-from pipeline.schema import SchemaLoader, Normalizer
-import pipeline.utils as utils
-from pipeline.utils import PostProcessor, PairGenerator
+from model.llm_client import LLMClient
+from named_entity_recognition import NamedEntityRecognition
+from relation_extraction import RelationExtraction
+from schema import SchemaLoader, Normalizer
+import utils as utils
+from utils import PostProcessor, PairGenerator
 
 logger = logging.getLogger("pipeline.run")
 
@@ -24,11 +24,11 @@ def configure_logging(config: Dict[str, Any]) -> None:
     root = logging.getLogger()
     for handler in list(root.handlers):
         root.removeHandler(handler)
-    root.setLevel(logging.DEBUG)
+    root.setLevel(getattr(logging, config["logging"]["level"].upper(), logging.INFO))
     formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
     file_handler = logging.FileHandler(log_path, encoding="utf-8")
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(getattr(logging, config["logging"]["level"].upper(), logging.INFO))
     file_handler.setFormatter(formatter)
     root.addHandler(file_handler)
 
@@ -50,10 +50,15 @@ def build_components():
     config = utils.load_config()
     schema = SchemaLoader()
     llm = LLMClient(config=config)
-    normalizer = Normalizer(schema)
+    from model.umls_client import UMLSClient
+    umls = UMLSClient(
+        api_key=config.get("umls", {}).get("api_key", ""),
+        api_url=config.get("umls", {}).get("api_url", "https://uts-ws.nlm.nih.gov/rest"),
+    )
+    normalizer = Normalizer(schema, llm_client=llm, umls_client=umls)
     ner = NamedEntityRecognition(schema, normalizer, llm, config)
     pair_generator = PairGenerator(schema)
-    re = RelationExtraction(llm, config)
+    re = RelationExtraction(llm, config, schema=schema)
     postprocessor = PostProcessor()
     return ner, pair_generator, re, postprocessor
 
