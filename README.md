@@ -47,6 +47,15 @@ Each evaluated pair is logged to `logs/relation_log.jsonl`. Low-confidence edges
 
 ```bash
 export OPENAI_API_KEY=sk-...
+python pipeline/fetch_pubmed.py --years 10 --output pipeline/data/pubmed_talazoparib.jsonl
+python pipeline/run_pipeline.py \
+  --input pipeline/data/pubmed_talazoparib.jsonl \
+  --output pipeline/data/relations.jsonl
+```
+
+## Running the Interface
+``` uvicorn server:app --reload --port 8000 ```
+Then, open http://localhost:8000/ to see the interface. You can toggle between modes (RAG or KG), ask your own questions, and analyze the responses.
 python fetch_pubmed.py --years 10 --output data/pubmed_talazoparib.jsonl
 python run_pipeline.py \
   --input data/pubmed_talazoparib.jsonl \
