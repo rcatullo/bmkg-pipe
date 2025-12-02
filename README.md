@@ -52,3 +52,7 @@ python pipeline/run_pipeline.py \
   --input pipeline/data/pubmed_talazoparib.jsonl \
   --output pipeline/data/relations.jsonl
 ```
+
+## Running the Interface
+``` uvicorn server:app --reload --port 8000 ```
+Then, open http://localhost:8000/ to see the interface. You can toggle between modes (RAG or KG), ask your own questions, and analyze the responses.

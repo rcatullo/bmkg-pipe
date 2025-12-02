@@ -1,16 +1,6 @@
 # server.py
 #
 # Biomedical KG Pipeline – QA Demo backend
-#
-# - POST /query  with JSON { "mode": "rag" | "kg", "question": "..." }
-#   - "rag": Generic RAG over PubMed abstracts (pubmed_talazoparib.jsonl)
-#   - "kg" : LLM-over-KG using relations.jsonl
-#            * deterministic relation selection based on question + schema
-#            * answer grounded in those relations
-#            * sources = sentence snippets from those same relations, each with a PMID
-#
-# - GET /         serves frontend/index.html
-# - GET /health   simple health check
 
 import json
 import os
