@@ -1,7 +1,7 @@
 # rag_baseline.py
 #
 # Minimal RAG baseline over PubMed talazoparib resistance abstracts
-# using LlamaIndex, entirely in memory (no persistence).
+# using LlamaIndex
 
 import json
 import argparse

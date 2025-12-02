@@ -53,11 +53,19 @@ python pipeline/run_pipeline.py \
   --output pipeline/data/relations.jsonl
 ```
 
-## Running the Interface
-``` uvicorn server:app --reload --port 8000 ```
-Then, open http://localhost:8000/ to see the interface. You can toggle between modes (RAG or KG), ask your own questions, and analyze the responses.
-python fetch_pubmed.py --years 10 --output data/pubmed_talazoparib.jsonl
-python run_pipeline.py \
-  --input data/pubmed_talazoparib.jsonl \
-  --output data/relations.jsonl
+## Running the Demo
+
+**Start the FastAPI backend:**
+```bash
+export OPENAI_API_KEY=...
+uvicorn server:app --reload --port 8000
 ```
+**Start the React frontend:**
+```
+cd frontend
+npm install      # first time only
+npm run dev
+```
+
+Backend will be available at: http://localhost:8000
+Frontend will run at: http://localhost:5173
