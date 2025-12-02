@@ -42,8 +42,11 @@ def import_triple(tx, record: Dict[str, Any]) -> None:
     s_id = subj.get("id") or f"{s_class}:{s_text}"
     o_id = obj.get("id") or f"{o_class}:{o_text}"
 
-    s_name = s_text
-    o_name = o_text
+    s_name = subj.get("canonical_form") or s_text
+    o_name = obj.get("canonical_form") or o_text
+    
+    s_umls_cui = subj.get("umls_cui")
+    o_umls_cui = obj.get("umls_cui")
 
     pmids = record.get("pmids") or []
     pmid = pmids[0] if pmids else None
@@ -53,11 +56,25 @@ def import_triple(tx, record: Dict[str, Any]) -> None:
     model_name = record.get("model_name")
     model_version = record.get("model_version")
 
+    s_create_props = ["s.name = $s_name", "s.text = $s_text"]
+    s_match_props = ["s.name = coalesce($s_name, s.name)", "s.text = coalesce($s_text, s.text)"]
+    if s_umls_cui:
+        s_create_props.append("s.umls_cui = $s_umls_cui")
+        s_match_props.append("s.umls_cui = coalesce($s_umls_cui, s.umls_cui)")
+    
+    o_create_props = ["o.name = $o_name", "o.text = $o_text"]
+    o_match_props = ["o.name = coalesce($o_name, o.name)", "o.text = coalesce($o_text, o.text)"]
+    if o_umls_cui:
+        o_create_props.append("o.umls_cui = $o_umls_cui")
+        o_match_props.append("o.umls_cui = coalesce($o_umls_cui, o.umls_cui)")
+
     query = f"""
     MERGE (s:{s_class} {{id: $s_id}})
-      ON CREATE SET s.name = $s_name
+      ON CREATE SET {', '.join(s_create_props)}
+      ON MATCH SET {', '.join(s_match_props)}
     MERGE (o:{o_class} {{id: $o_id}})
-      ON CREATE SET o.name = $o_name
+      ON CREATE SET {', '.join(o_create_props)}
+      ON MATCH SET {', '.join(o_match_props)}
     MERGE (s)-[r:{rel_type}]->(o)
     SET
       r.pmid          = coalesce($pmid, r.pmid),
@@ -70,20 +87,27 @@ def import_triple(tx, record: Dict[str, Any]) -> None:
       r.sentences     = coalesce($sentences, r.sentences)
     """
 
-    tx.run(
-        query,
-        s_id=s_id,
-        s_name=s_name,
-        o_id=o_id,
-        o_name=o_name,
-        pmid=pmid,
-        pmids=pmids,
-        confidence=confidence,
-        timestamp=timestamp,
-        model_name=model_name,
-        model_version=model_version,
-        sentences=sentences,
-    )
+    params = {
+        "s_id": s_id,
+        "s_name": s_name,
+        "s_text": s_text,
+        "o_id": o_id,
+        "o_name": o_name,
+        "o_text": o_text,
+        "pmid": pmid,
+        "pmids": pmids,
+        "confidence": confidence,
+        "timestamp": timestamp,
+        "model_name": model_name,
+        "model_version": model_version,
+        "sentences": sentences,
+    }
+    if s_umls_cui:
+        params["s_umls_cui"] = s_umls_cui
+    if o_umls_cui:
+        params["o_umls_cui"] = o_umls_cui
+    
+    tx.run(query, **params)
 
 
 def import_file(path: str) -> None:
