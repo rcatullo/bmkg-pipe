@@ -20,15 +20,29 @@ def parse_sentences(sentences: Optional[List[Dict[str, Any]]]) -> List[str]:
     ]
 
 
-def import_triple(tx, record: Dict[str, Any]) -> None:
-    """Import a single JSONL record as nodes + relationship into Neo4j."""
+def check_relation_exists(tx, s_id: str, o_id: str, rel_type: str) -> bool:
+    """Check if a relation already exists between subject and object."""
+    query = f"""
+    MATCH (s)-[r:{rel_type}]->(o)
+    WHERE s.id = $s_id AND o.id = $o_id
+    RETURN r LIMIT 1
+    """
+    result = tx.run(query, s_id=s_id, o_id=o_id)
+    return result.single() is not None
+
+
+def import_triple(tx, record: Dict[str, Any]) -> bool:
+    """
+    Import a single JSONL record as nodes + relationship into Neo4j.
+    Returns True if the relation was imported (new), False if it already existed.
+    """
 
     subj = record.get("subject") or {}
     obj = record.get("object") or {}
     predicate = record.get("predicate")
 
     if not subj or not obj or not predicate:
-        return
+        return False
 
     rel_type = predicate.upper()
     confidence = record.get("confidence")
@@ -41,6 +55,10 @@ def import_triple(tx, record: Dict[str, Any]) -> None:
 
     s_id = subj.get("id") or f"{s_class}:{s_text}"
     o_id = obj.get("id") or f"{o_class}:{o_text}"
+
+    # Check if relation already exists
+    if check_relation_exists(tx, s_id, o_id, rel_type):
+        return False
 
     s_name = subj.get("canonical_form") or s_text
     o_name = obj.get("canonical_form") or o_text
@@ -108,6 +126,7 @@ def import_triple(tx, record: Dict[str, Any]) -> None:
         params["o_umls_cui"] = o_umls_cui
     
     tx.run(query, **params)
+    return True
 
 
 def import_file(path: str) -> None:
@@ -115,6 +134,7 @@ def import_file(path: str) -> None:
     driver = GraphDatabase.driver(URI, auth=(USER, PASSWORD))
     total = 0
     imported = 0
+    skipped = 0
 
     with driver.session(database=DATABASE) as session:
         with open(path, "r", encoding="utf-8") as f:
@@ -130,13 +150,16 @@ def import_file(path: str) -> None:
                     continue
 
                 try:
-                    session.execute_write(import_triple, record)
-                    imported += 1
+                    was_imported = session.execute_write(import_triple, record)
+                    if was_imported:
+                        imported += 1
+                    else:
+                        skipped += 1
                 except Exception as e:
                     print(f"Line {line_num}: Neo4j error, skipping: {e}")
 
     driver.close()
-    print(f"Done. Processed {total} lines, imported (attempted) {imported}.")
+    print(f"Done. Processed {total} lines, imported {imported} new relations, skipped {skipped} existing relations.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Import JSONL triples into Neo4j.")

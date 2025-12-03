@@ -191,6 +191,19 @@ class NamedEntityRecognition:
         normalized = []
         for e in entities:
             normalized_entity = self.normalizer.normalize(e, context=sentence.text)
+            # Filter out entities that require UMLS CUI but don't have one
+            entity_class = normalized_entity.get("class")
+            if entity_class in ["Gene", "Chemical", "Disease", "Phenotype", "Pathway", "Mutation"]:
+                umls_cui = normalized_entity.get("umls_cui")
+                if not umls_cui:
+                    logger.warning(
+                        "Filtering out %s entity '%s' (class: %s) without required UMLS CUI. Canonical form: %s",
+                        entity_class,
+                        normalized_entity.get("text", "unknown"),
+                        entity_class,
+                        normalized_entity.get("canonical_form", "none"),
+                    )
+                    continue
             normalized.append(normalized_entity)
         return normalized
 

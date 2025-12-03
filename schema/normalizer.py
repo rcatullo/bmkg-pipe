@@ -13,11 +13,12 @@ class Normalizer:
         schema: SchemaLoader,
         llm_client=None,
         umls_client=None,
+        existing_cui_to_canonical: Optional[Dict[str, str]] = None,
     ):
         self.policy = schema.normalization_policy()
         self.llm_client = llm_client
         self.umls_client = umls_client
-        self._cui_to_canonical: Dict[str, str] = {}
+        self._cui_to_canonical: Dict[str, str] = existing_cui_to_canonical.copy() if existing_cui_to_canonical else {}
 
     @staticmethod
     def _slug(text: str) -> str:
