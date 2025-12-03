@@ -22,34 +22,67 @@ class UMLSClient:
         if canonical_form in self._cache:
             return self._cache[canonical_form]
 
-        url = f"{self.api_url}/search/current"
-        params = {
-            "apiKey": self.api_key,
-            "string": canonical_form,
-            "pageSize": 1,
-            "returnIdType": "concept",
-        }
+        # Try multiple search strategies
+        search_terms = [
+            canonical_form,  # Original canonical form
+            canonical_form.lower(),  # Lowercase
+            canonical_form.replace(" neoplasms", " cancer"),  # Try "cancer" instead of "neoplasms"
+            canonical_form.replace(" cancer", " neoplasms"),  # Try "neoplasms" instead of "cancer"
+        ]
+        
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_terms = []
+        for term in search_terms:
+            if term and term not in seen:
+                seen.add(term)
+                unique_terms.append(term)
 
-        try:
-            response = requests.get(url, params=params, timeout=10)
-            response.raise_for_status()
-            data = response.json()
-            results = data.get("result", {}).get("results", [])
-            if results:
-                cui = results[0].get("ui")
-                self._cache[canonical_form] = cui
-                return cui
-            self._cache[canonical_form] = None
-            return None
-        except requests.exceptions.HTTPError as exc:
-            if exc.response.status_code == 401:
-                logger.error("UMLS API authentication failed. Check API key validity.")
-            else:
-                logger.warning("UMLS search failed for '%s': %s", canonical_form, exc)
-            self._cache[canonical_form] = None
-            return None
-        except Exception as exc:
-            logger.warning("UMLS search failed for '%s': %s", canonical_form, exc)
-            self._cache[canonical_form] = None
-            return None
+        url = f"{self.api_url}/search/current"
+        
+        for search_term in unique_terms:
+            # Check cache first
+            if search_term in self._cache:
+                cached_result = self._cache[search_term]
+                if cached_result:
+                    # Cache the result for the original canonical form too
+                    self._cache[canonical_form] = cached_result
+                    return cached_result
+                continue
+            
+            params = {
+                "apiKey": self.api_key,
+                "string": search_term,
+                "pageSize": 1,
+                "returnIdType": "concept",
+            }
+
+            try:
+                response = requests.get(url, params=params, timeout=10)
+                response.raise_for_status()
+                data = response.json()
+                results = data.get("result", {}).get("results", [])
+                if results:
+                    cui = results[0].get("ui")
+                    # Cache for both the search term and original canonical form
+                    self._cache[search_term] = cui
+                    self._cache[canonical_form] = cui
+                    return cui
+                # Cache None result for this search term
+                self._cache[search_term] = None
+            except requests.exceptions.HTTPError as exc:
+                if exc.response.status_code == 401:
+                    logger.error("UMLS API authentication failed. Check API key validity.")
+                    self._cache[canonical_form] = None
+                    return None
+                else:
+                    logger.debug("UMLS search failed for '%s': %s", search_term, exc)
+                self._cache[search_term] = None
+            except Exception as exc:
+                logger.debug("UMLS search failed for '%s': %s", search_term, exc)
+                self._cache[search_term] = None
+        
+        # All searches failed
+        self._cache[canonical_form] = None
+        return None
 

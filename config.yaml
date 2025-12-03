@@ -14,6 +14,8 @@ logging:
   level: "INFO"
   log_file: "logs/pipeline.log"
   relation_log_file: "logs/relation_log.jsonl"
+  processed_pmids_log: "logs/processed_pmids.jsonl"
+  fetched_queries_log: "logs/fetched_queries.jsonl"
   logging_level: 20
 
 
@@ -27,3 +29,26 @@ named_entity_recognition:
 umls:
   api_key: "8a8c8ead-cf26-40e9-986e-08b358bd9ad7"
   api_url: "https://uts-ws.nlm.nih.gov/rest"
+
+pubmed:
+  queries:
+    - "PARP inhibitor resistance mechanisms"
+    - "biomarker predicts response targeted therapy"
+    - "drug combination synergy cancer"
+    - "driver mutation oncogene cancer"
+    - "pathway inhibition targeted therapy"
+    - "synthetic lethality PARP BRCA"
+    - "FDA approval cancer drug"
+    - "gene expression chemotherapy resistance"
+    - "tumor suppressor mutation cancer"
+    - "drug overcomes resistance combination"
+    - "talazoparib resistance homologous recombination repair"
+    - "HRR pathway mutation PARP inhibitor resistance"
+    - "replication fork protection talazoparib resistance"
+    - "DNA damage response talazoparib resistance mechanism"
+    - "biomarker talazoparib response predictive"
+    - "drug combination talazoparib overcomes resistance"
+    - "acquired resistance talazoparib secondary mutation"
+    - "gene expression signature talazoparib resistance"
+    - "clinical trial talazoparib resistance progression"
+    - "alternative DNA repair pathway PARP resistance"
