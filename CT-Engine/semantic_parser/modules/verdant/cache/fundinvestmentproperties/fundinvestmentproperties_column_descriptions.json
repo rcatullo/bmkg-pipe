@@ -1,0 +1,13 @@
+{
+    "fund": "Name of the private-equity or investment fund that made the investment.",
+    "portfolio": "Legal name of the portfolio company or special purpose vehicle (SPV) in which the fund invested.",
+    "company_description": "Narrative summary of the portfolio company\u2019s business model, products, and market position.",
+    "sector": "Industry sector classification of the portfolio company (e.g., Consumer, Industrials).",
+    "status_unrealized_partial_realized_realized_write_off": "Current disposition status of the investment indicating whether it is unrealized, partially realized, fully realized, or written off.",
+    "first_investment_date": "Calendar date on which the fund first deployed capital into the portfolio company.",
+    "ipo_date": "Date the portfolio company executed its initial public offering, if applicable.",
+    "ticker": "Public market ticker symbol assigned to the company after it became listed, if applicable.",
+    "exit_date": "Date on which the fund fully exited or disposed of its position in the company.",
+    "exit_method": "Type of liquidity event or transaction used to exit the investment (e.g., IPO, trade sale, secondary sale, write-off).",
+    "holding_period_years": "Calculated length of time, in years, that the fund held the investment from first investment to exit."
+}

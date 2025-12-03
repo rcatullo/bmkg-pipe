@@ -1,0 +1,79 @@
+[
+    {
+        "column_name": "fund",
+        "data_type": "character varying",
+        "character_maximum_length": 128,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "portfolio",
+        "data_type": "character varying",
+        "character_maximum_length": 128,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "company_description",
+        "data_type": "text",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "sector",
+        "data_type": "character varying",
+        "character_maximum_length": 64,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "status_unrealized_partial_realized_realized_write_off",
+        "data_type": "character varying",
+        "character_maximum_length": 32,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "first_investment_date",
+        "data_type": "date",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "ipo_date",
+        "data_type": "date",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "ticker",
+        "data_type": "character varying",
+        "character_maximum_length": 16,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "exit_date",
+        "data_type": "date",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "exit_method",
+        "data_type": "character varying",
+        "character_maximum_length": 64,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "holding_period_years",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    }
+]

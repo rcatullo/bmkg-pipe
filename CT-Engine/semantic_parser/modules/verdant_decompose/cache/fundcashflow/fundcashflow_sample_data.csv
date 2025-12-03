@@ -1,0 +1,6 @@
+fund,transaction_type,no,document_date,trans_date,year,project,portfolio_investment,mgmt_fee,partnership_exp,org_fee,others,trans_amt,cum_capital_called,remaining_callable_capital,distributions,cum_dist_before_carry,carry_interest,carried_interest_received_as_co_gp,withholding_tax,recycled_amount,distributions_after_carried,cum_dist_after_carry,capital_account_balance,notes
+Ascendent Fund,Capital Call,CC#1,2011-12-16,2012-01-04,2012-01-01,Shuanghui,"-1,661,500.31",-49315.07,,-170695.38,,-1881510.7600,-1881511.00,8118489.24,,,,,,,,,,
+Ascendent Fund,Capital Call,CC#2,2012-03-26,2012-04-12,2012-01-01,,,-49863.01,-4133.0900,-20665.43,,-74661.5300,-1956172.00,8043827.71,,,,,,,,,,
+Ascendent Fund,Capital Call,CC#3,2012-06-15,2012-07-03,2012-01-01,,,-50410.96,,,,-50410.9600,-2006583.00,7993416.75,,,,,,,,,,Ties to 2012 Q2 CAS
+Ascendent Fund,Recallable distribution,DD#1,2012-12-03,2012-12-17,2012-01-01,,"561,366.21",,1396.4400,22624.42,,585387.0700,-1421196.00,8578803.82,,,,,,,,,,Ties to 2012 Q3 CAS
+Ascendent Fund,Capital Call,CC#4,2012-12-03,2012-12-17,2012-01-01,Queens,"-875,728.63",-50410.96,-5473.3000,,,-931612.8900,-2352809.00,7647190.93,,,,,,,,,,

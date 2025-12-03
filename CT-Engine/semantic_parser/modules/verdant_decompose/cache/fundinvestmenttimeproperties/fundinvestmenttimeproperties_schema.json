@@ -1,0 +1,86 @@
+[
+    {
+        "column_name": "fund",
+        "data_type": "character varying",
+        "character_maximum_length": 255,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "investment",
+        "data_type": "character varying",
+        "character_maximum_length": 255,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "quarter",
+        "data_type": "character varying",
+        "character_maximum_length": 255,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "investment_cost_usd_mil",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "pct_of_ownership",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "realized_value_usd_mil",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "unrealized_value_usd_mil",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "total_value_usd_mil",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "moic",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "irr",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "total_value_dol_change_yoy",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "total_value_pct_change_yoy",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    }
+]

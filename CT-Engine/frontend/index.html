@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReACT Engine | Reasoning Trace Viewer</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --bg-card: #15151f;
+            --border: #2a2a3a;
+            --text-primary: #e8e8f0;
+            --text-secondary: #9898a8;
+            --text-muted: #6868788;
+            --accent-blue: #5b8def;
+            --accent-purple: #a855f7;
+            --accent-green: #22c55e;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-cyan: #06b6d4;
+            --gradient-1: linear-gradient(135deg, #5b8def 0%, #a855f7 100%);
+            --shadow-glow: 0 0 40px rgba(91, 141, 239, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .module-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-tertiary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        .module-badge .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .nav-link.active {
+            color: var(--accent-blue);
+            background: rgba(91, 141, 239, 0.1);
+            border-color: var(--accent-blue);
+        }
+
+        /* Main Layout */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 2rem;
+            min-height: calc(100vh - 80px);
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Input Panel */
+        .input-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .input-panel h2 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-panel h2::before {
+            content: '▸';
+            color: var(--accent-blue);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            resize: vertical;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.15);
+        }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .slider-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: var(--accent-blue);
+            min-width: 30px;
+            text-align: right;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239898a8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.15);
+        }
+
+        select option {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            padding: 0.5rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            background: var(--gradient-1);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-stop {
+            flex: 0 0 auto;
+            background: var(--accent-red);
+            padding: 1rem 1.25rem;
+        }
+
+        .btn-stop:hover:not(:disabled) {
+            background: #dc2626;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn.loading .btn-text {
+            display: none;
+        }
+
+        .btn .spinner {
+            display: none;
+        }
+
+        .btn.loading .spinner {
+            display: block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Trace Panel */
+        .trace-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .trace-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .trace-header h2 {
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .step-counter {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+        }
+
+        .trace-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            background: var(--bg-card);
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .trace-empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .trace-empty h3 {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .trace-empty p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Steps */
+        .steps-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .step-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .step-number {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .step-badge {
+            width: 32px;
+            height: 32px;
+            background: var(--gradient-1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .step-action {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+        }
+
+        .step-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .step-status.success {
+            color: var(--accent-green);
+        }
+
+        .step-status.error {
+            color: var(--accent-red);
+        }
+
+        .step-content {
+            padding: 1.25rem;
+        }
+
+        .step-section {
+            margin-bottom: 1.25rem;
+        }
+
+        .step-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-section-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .step-section-label::before {
+            content: '';
+            width: 3px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        .step-section.thought .step-section-label::before {
+            background: var(--accent-purple);
+        }
+
+        .step-section.action .step-section-label::before {
+            background: var(--accent-blue);
+        }
+
+        .step-section.observation .step-section-label::before {
+            background: var(--accent-green);
+        }
+
+        .step-text {
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: var(--text-primary);
+        }
+
+        .step-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* Final Output */
+        .final-output {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+            border: 1px solid var(--accent-green);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .final-output-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .final-output-icon {
+            font-size: 1.5rem;
+        }
+
+        .final-output-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--accent-green);
+        }
+
+        .final-output-content {
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">S</div>
+                <h1>Semantic Parser</h1>
+            </div>
+            <nav class="nav-links">
+                <a href="/" class="nav-link active">Single Engine</a>
+                <a href="/compare" class="nav-link">Compare Engines</a>
+            </nav>
+            <div class="module-badge" id="moduleBadge">
+                <span class="dot"></span>
+                <span id="moduleInfo">Loading...</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <aside class="input-panel">
+            <h2>Query Input</h2>
+            
+            <div class="form-group">
+                <label for="queryInput">Natural Language Query</label>
+                <textarea 
+                    id="queryInput" 
+                    placeholder="Enter your query here...&#10;&#10;Example: What is the total MOIC for all funds in Q4 2024?"
+                ></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="engineSelect">Engine</label>
+                <select id="engineSelect" onchange="updateEngineUI()">
+                    <option value="react" selected>ReACT (Reasoning + Actions)</option>
+                    <option value="baseline">Baseline (Direct LLM)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="modelSelect">Base Model</label>
+                <select id="modelSelect">
+                    <option value="gpt-4o">GPT-4o</option>
+                    <option value="gpt-4o-mini">GPT-4o-mini</option>
+                    <option value="gpt-4.1" selected>GPT-4.1</option>
+                    <option value="o3">O3</option>
+                    <option value="gpt-5">GPT-5</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="maxStepsGroup">
+                <label>Maximum Steps (ReACT only)</label>
+                <div class="slider-group">
+                    <input type="range" id="maxSteps" min="1" max="20" value="10">
+                    <span class="slider-value" id="maxStepsValue">10</span>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn" id="runBtn" onclick="runQuery()">
+                    <span class="btn-text">▶ Run Query</span>
+                    <div class="spinner"></div>
+                </button>
+                <button class="btn btn-stop" id="stopBtn" onclick="stopQuery()" style="display: none;">
+                    <span class="btn-text">⏹ Stop</span>
+                </button>
+            </div>
+        </aside>
+
+        <section class="trace-panel">
+            <div class="trace-header">
+                <h2>
+                    <span>🧠</span>
+                    Reasoning Trace
+                </h2>
+                <span class="step-counter" id="stepCounter">0 steps</span>
+            </div>
+
+            <div id="traceContent">
+                <div class="trace-empty">
+                    <div class="trace-empty-icon">💭</div>
+                    <h3>No reasoning trace yet</h3>
+                    <p>Enter a query and click "Run Query" to see the step-by-step reasoning process</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Global abort controller for cancelling requests
+        let currentAbortController = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchModuleInfo();
+            setupSlider();
+            updateEngineUI();
+        });
+
+        function setupSlider() {
+            const slider = document.getElementById('maxSteps');
+            const value = document.getElementById('maxStepsValue');
+            slider.addEventListener('input', () => {
+                value.textContent = slider.value;
+            });
+        }
+
+        function updateEngineUI() {
+            const engine = document.getElementById('engineSelect').value;
+            const maxStepsGroup = document.getElementById('maxStepsGroup');
+            const stepCounter = document.getElementById('stepCounter');
+            const traceHeader = document.querySelector('.trace-header h2');
+            
+            if (engine === 'baseline') {
+                maxStepsGroup.style.opacity = '0.5';
+                maxStepsGroup.style.pointerEvents = 'none';
+                traceHeader.innerHTML = '<span>📊</span> Baseline Response';
+                stepCounter.textContent = 'Direct';
+            } else {
+                maxStepsGroup.style.opacity = '1';
+                maxStepsGroup.style.pointerEvents = 'auto';
+                traceHeader.innerHTML = '<span>🧠</span> Reasoning Trace';
+                stepCounter.textContent = '0 steps';
+            }
+        }
+
+        async function fetchModuleInfo() {
+            try {
+                const response = await fetch('/api/module-info');
+                const data = await response.json();
+                document.getElementById('moduleInfo').textContent = 
+                    `${data.module_name} • ${data.target_format}`;
+            } catch (error) {
+                document.getElementById('moduleInfo').textContent = 'Disconnected';
+            }
+        }
+
+        function stopQuery() {
+            if (currentAbortController) {
+                currentAbortController.abort();
+                currentAbortController = null;
+            }
+            
+            const runBtn = document.getElementById('runBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            
+            runBtn.classList.remove('loading');
+            runBtn.disabled = false;
+            stopBtn.style.display = 'none';
+            
+            document.getElementById('traceContent').innerHTML = `
+                <div class="trace-empty" style="border-color: var(--accent-amber);">
+                    <div class="trace-empty-icon">⏹️</div>
+                    <h3>Generation stopped</h3>
+                    <p>The query was cancelled by user</p>
+                </div>
+            `;
+        }
+
+        async function runQuery() {
+            const query = document.getElementById('queryInput').value.trim();
+            if (!query) {
+                alert('Please enter a query');
+                return;
+            }
+
+            // Create new abort controller
+            currentAbortController = new AbortController();
+
+            const runBtn = document.getElementById('runBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            
+            runBtn.classList.add('loading');
+            runBtn.disabled = true;
+            stopBtn.style.display = 'flex';
+
+            const maxSteps = parseInt(document.getElementById('maxSteps').value);
+            const model = document.getElementById('modelSelect').value;
+            const engine = document.getElementById('engineSelect').value;
+            
+            // Clear previous trace
+            document.getElementById('traceContent').innerHTML = `
+                <div class="trace-empty">
+                    <div class="trace-empty-icon">⏳</div>
+                    <h3>Processing...</h3>
+                    <p>Click "Stop" to cancel the generation</p>
+                </div>
+            `;
+            document.getElementById('stepCounter').textContent = engine === 'baseline' ? 'Direct' : '0 steps';
+
+            try {
+                const response = await fetch('/api/parse', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query, max_steps: maxSteps, model: model, engine: engine }),
+                    signal: currentAbortController.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.engine_type === 'baseline') {
+                    renderBaselineResult(data);
+                } else {
+                    renderTrace(data);
+                }
+
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    // Already handled in stopQuery
+                    return;
+                }
+                console.error('Error:', error);
+                document.getElementById('traceContent').innerHTML = `
+                    <div class="trace-empty" style="border-color: var(--accent-red);">
+                        <div class="trace-empty-icon">❌</div>
+                        <h3>Error occurred</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                currentAbortController = null;
+                runBtn.classList.remove('loading');
+                runBtn.disabled = false;
+                stopBtn.style.display = 'none';
+            }
+        }
+
+        function renderBaselineResult(result) {
+            const container = document.getElementById('traceContent');
+            container.innerHTML = '';
+            
+            const div = document.createElement('div');
+            div.className = 'final-output';
+            div.style.background = 'linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)';
+            div.style.borderColor = 'var(--accent-purple)';
+            
+            div.innerHTML = `
+                <div class="final-output-header">
+                    <span class="final-output-icon">📊</span>
+                    <span class="final-output-title" style="color: var(--accent-purple);">Baseline Response</span>
+                </div>
+                <div class="final-output-content" style="white-space: pre-wrap;">${escapeHtml(result.answer)}</div>
+                <div class="stats-bar" style="border-top-color: rgba(168, 85, 247, 0.3);">
+                    <div class="stat-item">
+                        <span>⏱️</span>
+                        <span class="stat-value">${result.duration_seconds?.toFixed(2) || '—'}s</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>📋</span>
+                        <span class="stat-value">${result.tables_used?.length || 0} tables</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>📝</span>
+                        <span class="stat-value">${result.total_rows || 0} rows</span>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(div);
+            document.getElementById('stepCounter').textContent = 'Direct';
+        }
+
+        function renderTrace(trace) {
+            const container = document.getElementById('traceContent');
+            container.innerHTML = '';
+
+            // Create steps container
+            const stepsContainer = document.createElement('div');
+            stepsContainer.className = 'steps-container';
+
+            // Render each step
+            trace.steps.forEach((step, index) => {
+                const stepCard = createStepCard(step, index);
+                stepsContainer.appendChild(stepCard);
+            });
+
+            container.appendChild(stepsContainer);
+
+            // Update step counter
+            document.getElementById('stepCounter').textContent = `${trace.steps.length} steps`;
+
+            // Render final output if complete
+            if (trace.is_complete && trace.final_output) {
+                const finalOutput = createFinalOutput(trace);
+                container.appendChild(finalOutput);
+            }
+        }
+
+        function createStepCard(step, index) {
+            const card = document.createElement('div');
+            card.className = 'step-card';
+            card.style.animationDelay = `${index * 0.1}s`;
+
+            const statusClass = step.success ? 'success' : 'error';
+            const statusText = step.success ? '✓ Success' : '✗ Failed';
+
+            card.innerHTML = `
+                <div class="step-header">
+                    <div class="step-number">
+                        <div class="step-badge">${step.step_number}</div>
+                        <span class="step-action">${step.action_name}</span>
+                    </div>
+                    <div class="step-status ${statusClass}">${statusText}</div>
+                </div>
+                <div class="step-content">
+                    <div class="step-section thought">
+                        <div class="step-section-label">Thought</div>
+                        <div class="step-text">${escapeHtml(step.thought)}</div>
+                    </div>
+                    
+                    <div class="step-section action">
+                        <div class="step-section-label">Action Parameters</div>
+                        <pre class="step-code">${formatJson(step.action_params)}</pre>
+                    </div>
+                    
+                    ${step.observation ? `
+                    <div class="step-section observation">
+                        <div class="step-section-label">Observation</div>
+                        <pre class="step-code">${escapeHtml(truncateText(step.observation, 2000))}</pre>
+                    </div>
+                    ` : ''}
+                    
+                    ${step.error ? `
+                    <div class="step-section" style="color: var(--accent-red);">
+                        <div class="step-section-label">Error</div>
+                        <div class="step-text">${escapeHtml(step.error)}</div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+
+            return card;
+        }
+
+        function createFinalOutput(trace) {
+            const div = document.createElement('div');
+            div.className = 'final-output';
+            div.innerHTML = `
+                <div class="final-output-header">
+                    <span class="final-output-icon">✅</span>
+                    <span class="final-output-title">Final Output</span>
+                </div>
+                <div class="final-output-content">${escapeHtml(trace.final_output)}</div>
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <span>⏱️</span>
+                        <span class="stat-value">${trace.duration_seconds?.toFixed(2) || '—'}s</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>📊</span>
+                        <span class="stat-value">${trace.steps.length} steps</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>🎯</span>
+                        <span class="stat-value">${trace.target_format}</span>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatJson(obj) {
+            try {
+                return JSON.stringify(obj, null, 2);
+            } catch {
+                return String(obj);
+            }
+        }
+
+        function truncateText(text, maxLength) {
+            if (!text || text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '\n\n... (truncated)';
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,37 @@
+[
+    {
+        "column_name": "fund",
+        "data_type": "character varying",
+        "character_maximum_length": 255,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "year",
+        "data_type": "date",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "cash_out_flow",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "cash_in_flow",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "net_cash_flow",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    }
+]

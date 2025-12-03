@@ -1,0 +1,7 @@
+{
+    "fund": "Free-form text strings containing investment-fund names/identifiers; categorical values that may include words, spaces, capitalisation, numerals or Roman numerals, and optional parenthetical \u201cAKA \u2026\u201d alternate names. No fixed standard beyond conventional fund-naming syntax (e.g., \u201c[Manager] [Fund] [Series/Number]\u201d).",
+    "year": "ISO-8601 date field storing the first day of each fiscal year (always \u201cYYYY-01-01\u201d, e.g., 2023-01-01); values are discrete annual points on the Gregorian calendar used as fiscal-year identifiers.",
+    "cash_out_flow": "Numeric cash amount stored as a high-precision DECIMAL/NUMERIC field (e.g., \u20113150648.0000), bearing a leading \u201c-\u201d sign for outflows and always showing four digits after the decimal; NULL represents missing data.",
+    "cash_in_flow": "Numeric field storing positive monetary amounts in USD as fixed-precision decimals with up to 4 digits after the decimal point (e.g., 1 102 4029.0000); NULL indicates no data.",
+    "net_cash_flow": "Signed monetary amount stored as a decimal number with exactly four-place precision (e.g., -12024167.0000), allowing both positive and negative values; continuous numeric field, nullable (None for missing)."
+}

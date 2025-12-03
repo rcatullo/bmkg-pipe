@@ -1,0 +1,177 @@
+[
+    {
+        "column_name": "fund",
+        "data_type": "text",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "transaction_type",
+        "data_type": "text",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "no",
+        "data_type": "text",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "document_date",
+        "data_type": "date",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "trans_date",
+        "data_type": "date",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "year",
+        "data_type": "date",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "project",
+        "data_type": "text",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "portfolio_investment",
+        "data_type": "character varying",
+        "character_maximum_length": 128,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "mgmt_fee",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "partnership_exp",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "org_fee",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "others",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "trans_amt",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "cum_capital_called",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "remaining_callable_capital",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "distributions",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "cum_dist_before_carry",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "carry_interest",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "carried_interest_received_as_co_gp",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "withholding_tax",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "recycled_amount",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "distributions_after_carried",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "cum_dist_after_carry",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "capital_account_balance",
+        "data_type": "numeric",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "column_name": "notes",
+        "data_type": "text",
+        "character_maximum_length": null,
+        "is_nullable": "YES",
+        "column_default": null
+    }
+]

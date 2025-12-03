@@ -1,0 +1,7 @@
+{
+    "fund": "Text name or identifier of the investment fund to which the cash-flow figures relate.",
+    "year": "Date (usually set to 1-Jan) indicating the financial or fiscal year for which the cash flows are recorded.",
+    "cash_out_flow": "Total amount of cash that left the fund during the stated year (e.g., capital deployments, expenses), recorded as a numeric value and typically negative.",
+    "cash_in_flow": "Total amount of cash received by the fund during the stated year (e.g., capital calls from investors, proceeds from investments), recorded as a numeric value.",
+    "net_cash_flow": "Net cash movement for the year, calculated as cash_in_flow minus cash_out_flow, showing the fund\u2019s overall cash generation or usage for that period."
+}

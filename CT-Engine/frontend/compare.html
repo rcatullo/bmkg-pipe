@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engine Comparison | Semantic Parser</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --bg-card: #15151f;
+            --border: #2a2a3a;
+            --text-primary: #e8e8f0;
+            --text-secondary: #9898a8;
+            --text-muted: #686878;
+            --accent-blue: #5b8def;
+            --accent-purple: #a855f7;
+            --accent-green: #22c55e;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-cyan: #06b6d4;
+            --gradient-1: linear-gradient(135deg, #5b8def 0%, #a855f7 100%);
+            --gradient-react: linear-gradient(135deg, #22c55e 0%, #06b6d4 100%);
+            --gradient-baseline: linear-gradient(135deg, #a855f7 0%, #f59e0b 100%);
+            --shadow-glow: 0 0 40px rgba(91, 141, 239, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .nav-link.active {
+            color: var(--accent-blue);
+            background: rgba(91, 141, 239, 0.1);
+            border-color: var(--accent-blue);
+        }
+
+        .module-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-tertiary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        .module-badge .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Layout */
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Input Section */
+        .input-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-section h2 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-section h2::before {
+            content: '⚖️';
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        @media (max-width: 900px) {
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            resize: vertical;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.15);
+        }
+
+        select {
+            padding: 0.75rem 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+            min-width: 150px;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239898a8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .btn {
+            padding: 0.75rem 2rem;
+            background: var(--gradient-1);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .btn-stop {
+            background: var(--accent-red);
+            padding: 0.75rem 1.5rem;
+        }
+
+        .btn-stop:hover:not(:disabled) {
+            background: #dc2626;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn.loading .btn-text {
+            display: none;
+        }
+
+        .btn .spinner {
+            display: none;
+        }
+
+        .btn.loading .spinner {
+            display: block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Comparison Grid */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1200px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .engine-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .engine-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .engine-header.react {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+        }
+
+        .engine-header.baseline {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%);
+        }
+
+        .engine-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .engine-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .engine-icon.react {
+            background: var(--gradient-react);
+        }
+
+        .engine-icon.baseline {
+            background: var(--gradient-baseline);
+        }
+
+        .engine-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .engine-name.react {
+            color: var(--accent-green);
+        }
+
+        .engine-name.baseline {
+            color: var(--accent-purple);
+        }
+
+        .engine-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .engine-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .engine-stat .value {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+
+        .engine-content {
+            padding: 1.25rem;
+            flex: 1;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+
+        .engine-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .engine-empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .engine-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--accent-red);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--accent-red);
+        }
+
+        /* Result Styles */
+        .result-content {
+            white-space: pre-wrap;
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        .steps-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .step-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .step-number {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .step-badge {
+            width: 24px;
+            height: 24px;
+            background: var(--gradient-react);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .step-action {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .step-content {
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .step-section {
+            margin-bottom: 0.75rem;
+        }
+
+        .step-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-section-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .step-text {
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .step-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.5rem;
+            overflow-x: auto;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .final-answer {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--accent-green);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .final-answer-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--accent-green);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">S</div>
+                <h1>Semantic Parser</h1>
+            </div>
+            <nav class="nav-links">
+                <a href="/" class="nav-link">Single Engine</a>
+                <a href="/compare" class="nav-link active">Compare Engines</a>
+            </nav>
+            <div class="module-badge">
+                <span class="dot"></span>
+                <span>Comparison Mode</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="input-section">
+            <h2>Compare Engines Side-by-Side</h2>
+            <div class="input-row">
+                <div class="form-group">
+                    <label for="queryInput">Natural Language Query</label>
+                    <textarea 
+                        id="queryInput" 
+                        placeholder="Enter your query here... Both engines will process it simultaneously."
+                    ></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="modelSelect">Model</label>
+                    <select id="modelSelect">
+                        <option value="gpt-4o">GPT-4o</option>
+                        <option value="gpt-4o-mini">GPT-4o-mini</option>
+                        <option value="gpt-4.1" selected>GPT-4.1</option>
+                        <option value="o3">O3</option>
+                        <option value="gpt-5">GPT-5</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="maxSteps">Max Steps</label>
+                    <select id="maxSteps">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="15">15</option>
+                        <option value="20">20</option>
+                    </select>
+                </div>
+                <button class="btn" id="runBtn" onclick="runComparison()">
+                    <span class="btn-text">⚖️ Compare</span>
+                    <div class="spinner"></div>
+                </button>
+                <button class="btn btn-stop" id="stopBtn" onclick="stopComparison()" style="display: none;">
+                    <span class="btn-text">⏹ Stop</span>
+                </button>
+            </div>
+        </section>
+
+        <div class="comparison-grid">
+            <!-- ReACT Panel -->
+            <div class="engine-panel">
+                <div class="engine-header react">
+                    <div class="engine-title">
+                        <div class="engine-icon react">🧠</div>
+                        <span class="engine-name react">ReACT Engine</span>
+                    </div>
+                    <div class="engine-stats" id="reactStats">
+                        <span class="engine-stat">⏱️ <span class="value" id="reactTime">—</span></span>
+                        <span class="engine-stat">📊 <span class="value" id="reactSteps">—</span></span>
+                    </div>
+                </div>
+                <div class="engine-content" id="reactContent">
+                    <div class="engine-empty">
+                        <div class="engine-empty-icon">🧠</div>
+                        <p>ReACT results will appear here</p>
+                        <p style="font-size: 0.8rem; margin-top: 0.5rem;">Multi-step reasoning with actions</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Baseline Panel -->
+            <div class="engine-panel">
+                <div class="engine-header baseline">
+                    <div class="engine-title">
+                        <div class="engine-icon baseline">📊</div>
+                        <span class="engine-name baseline">Baseline Engine</span>
+                    </div>
+                    <div class="engine-stats" id="baselineStats">
+                        <span class="engine-stat">⏱️ <span class="value" id="baselineTime">—</span></span>
+                        <span class="engine-stat">📋 <span class="value" id="baselineTables">—</span></span>
+                    </div>
+                </div>
+                <div class="engine-content" id="baselineContent">
+                    <div class="engine-empty">
+                        <div class="engine-empty-icon">📊</div>
+                        <p>Baseline results will appear here</p>
+                        <p style="font-size: 0.8rem; margin-top: 0.5rem;">Direct LLM prompting with data</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Global abort controller for cancelling requests
+        let currentAbortController = null;
+
+        function stopComparison() {
+            if (currentAbortController) {
+                currentAbortController.abort();
+                currentAbortController = null;
+            }
+            
+            const runBtn = document.getElementById('runBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            
+            runBtn.classList.remove('loading');
+            runBtn.disabled = false;
+            stopBtn.style.display = 'none';
+            
+            document.getElementById('reactContent').innerHTML = '<div class="engine-empty" style="border: 1px solid var(--accent-amber); border-radius: 12px;"><div class="engine-empty-icon">⏹️</div><p>Stopped by user</p></div>';
+            document.getElementById('baselineContent').innerHTML = '<div class="engine-empty" style="border: 1px solid var(--accent-amber); border-radius: 12px;"><div class="engine-empty-icon">⏹️</div><p>Stopped by user</p></div>';
+        }
+
+        async function runComparison() {
+            const query = document.getElementById('queryInput').value.trim();
+            if (!query) {
+                alert('Please enter a query');
+                return;
+            }
+
+            // Create new abort controller
+            currentAbortController = new AbortController();
+
+            const runBtn = document.getElementById('runBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            
+            runBtn.classList.add('loading');
+            runBtn.disabled = true;
+            stopBtn.style.display = 'flex';
+
+            const model = document.getElementById('modelSelect').value;
+            const maxSteps = parseInt(document.getElementById('maxSteps').value);
+
+            // Clear previous results
+            document.getElementById('reactContent').innerHTML = '<div class="engine-empty"><div class="engine-empty-icon">⏳</div><p>Processing...</p><p style="font-size: 0.8rem; margin-top: 0.5rem; color: var(--text-muted);">Click Stop to cancel</p></div>';
+            document.getElementById('baselineContent').innerHTML = '<div class="engine-empty"><div class="engine-empty-icon">⏳</div><p>Processing...</p><p style="font-size: 0.8rem; margin-top: 0.5rem; color: var(--text-muted);">Click Stop to cancel</p></div>';
+            document.getElementById('reactTime').textContent = '—';
+            document.getElementById('reactSteps').textContent = '—';
+            document.getElementById('baselineTime').textContent = '—';
+            document.getElementById('baselineTables').textContent = '—';
+
+            try {
+                const response = await fetch('/api/compare', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query, model, max_steps: maxSteps }),
+                    signal: currentAbortController.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                renderComparison(data);
+
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    // Already handled in stopComparison
+                    return;
+                }
+                console.error('Error:', error);
+                document.getElementById('reactContent').innerHTML = `<div class="engine-error">Error: ${escapeHtml(error.message)}</div>`;
+                document.getElementById('baselineContent').innerHTML = `<div class="engine-error">Error: ${escapeHtml(error.message)}</div>`;
+            } finally {
+                currentAbortController = null;
+                runBtn.classList.remove('loading');
+                runBtn.disabled = false;
+                stopBtn.style.display = 'none';
+            }
+        }
+
+        function renderComparison(data) {
+            // Render ReACT results
+            if (data.react_error) {
+                document.getElementById('reactContent').innerHTML = `<div class="engine-error">Error: ${escapeHtml(data.react_error)}</div>`;
+            } else if (data.react_result) {
+                renderReactResult(data.react_result);
+            }
+
+            // Render Baseline results
+            if (data.baseline_error) {
+                document.getElementById('baselineContent').innerHTML = `<div class="engine-error">Error: ${escapeHtml(data.baseline_error)}</div>`;
+            } else if (data.baseline_result) {
+                renderBaselineResult(data.baseline_result);
+            }
+        }
+
+        function renderReactResult(result) {
+            const container = document.getElementById('reactContent');
+            container.innerHTML = '';
+
+            // Update stats
+            document.getElementById('reactTime').textContent = `${result.duration_seconds?.toFixed(2) || '—'}s`;
+            document.getElementById('reactSteps').textContent = `${result.steps?.length || 0} steps`;
+
+            // Create steps container
+            const stepsContainer = document.createElement('div');
+            stepsContainer.className = 'steps-container';
+
+            // Render each step
+            if (result.steps) {
+                result.steps.forEach((step, index) => {
+                    const stepCard = createStepCard(step);
+                    stepsContainer.appendChild(stepCard);
+                });
+            }
+
+            container.appendChild(stepsContainer);
+
+            // Render final output
+            if (result.final_output) {
+                const finalDiv = document.createElement('div');
+                finalDiv.className = 'final-answer';
+                finalDiv.innerHTML = `
+                    <div class="final-answer-label">✅ Final Answer</div>
+                    <div class="result-content">${escapeHtml(result.final_output)}</div>
+                `;
+                container.appendChild(finalDiv);
+            }
+        }
+
+        function renderBaselineResult(result) {
+            const container = document.getElementById('baselineContent');
+            container.innerHTML = '';
+
+            // Update stats
+            document.getElementById('baselineTime').textContent = `${result.duration_seconds?.toFixed(2) || '—'}s`;
+            document.getElementById('baselineTables').textContent = `${result.tables_used?.length || 0} tables`;
+
+            // Render answer
+            const answerDiv = document.createElement('div');
+            answerDiv.className = 'result-content';
+            answerDiv.textContent = result.answer;
+            container.appendChild(answerDiv);
+
+            // Render tables info
+            if (result.tables_used && result.tables_used.length > 0) {
+                const tablesDiv = document.createElement('div');
+                tablesDiv.className = 'final-answer';
+                tablesDiv.style.borderColor = 'var(--accent-purple)';
+                tablesDiv.innerHTML = `
+                    <div class="final-answer-label" style="color: var(--accent-purple);">📋 Tables Used (${result.tables_used.length})</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                        ${result.tables_used.slice(0, 10).join(', ')}${result.tables_used.length > 10 ? '...' : ''}
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">
+                        Total rows processed: ${result.total_rows?.toLocaleString() || 0}
+                    </div>
+                `;
+                container.appendChild(tablesDiv);
+            }
+        }
+
+        function createStepCard(step) {
+            const card = document.createElement('div');
+            card.className = 'step-card';
+
+            card.innerHTML = `
+                <div class="step-header">
+                    <div class="step-number">
+                        <div class="step-badge">${step.step_number}</div>
+                        <span class="step-action">${step.action_name}</span>
+                    </div>
+                </div>
+                <div class="step-content">
+                    <div class="step-section">
+                        <div class="step-section-label">Thought</div>
+                        <div class="step-text">${escapeHtml(truncateText(step.thought, 200))}</div>
+                    </div>
+                    ${step.observation ? `
+                    <div class="step-section">
+                        <div class="step-section-label">Observation</div>
+                        <pre class="step-code">${escapeHtml(truncateText(step.observation, 300))}</pre>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+
+            return card;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function truncateText(text, maxLength) {
+            if (!text || text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '...';
+        }
+    </script>
+</body>
+</html>
+

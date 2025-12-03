@@ -2,10 +2,14 @@
 #
 # Biomedical KG Pipeline – QA Demo backend
 
+# server.py
+#
+# Biomedical KG Pipeline – QA Demo backend
+
 import json
 import os
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,6 +20,9 @@ from llama_index.core import Document, VectorStoreIndex
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai import OpenAI
 from llama_index.core.node_parser import SentenceSplitter
+
+from neo4j import GraphDatabase
+from semantic_parser.modules.cypher import create_action_registry
 
 
 # -----------------------------
@@ -68,6 +75,17 @@ class QueryResponse(BaseModel):
 # -----------------------------
 RAG_INDEX: Optional[VectorStoreIndex] = None
 RELATIONS: List[Dict] = []
+CYTHER_REGISTRY = None
+GENERATE_CYPHER_ACTION = None
+NEO4J_DRIVER = None
+
+NEO4J_URI = os.getenv("NEO4J_URI", "neo4j+s://4e9b2d24.databases.neo4j.io")
+NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
+NEO4J_PASSWORD = os.getenv(
+    "NEO4J_PASSWORD",
+    "4MyZedIjW_ZdPpR7xzXx5ocCENECin_jZh6WThHHktU",
+)
+MAX_GRAPH_SOURCES = 5
 
 
 # -----------------------------
@@ -178,6 +196,151 @@ def load_relations(path: Path) -> List[Dict]:
 
 
 # -----------------------------
+# Cypher / Neo4j helpers
+# -----------------------------
+def init_cypher_components() -> None:
+    """Initialize Neo4j driver and Cypher action registry."""
+    global CYTHER_REGISTRY, GENERATE_CYPHER_ACTION, NEO4J_DRIVER
+
+    if NEO4J_DRIVER is None:
+        NEO4J_DRIVER = GraphDatabase.driver(
+            NEO4J_URI,
+            auth=(NEO4J_USER, NEO4J_PASSWORD),
+        )
+
+    CYTHER_REGISTRY = create_action_registry()
+    GENERATE_CYPHER_ACTION = CYTHER_REGISTRY.get_action("GenerateCypher")
+    if GENERATE_CYPHER_ACTION is None:
+        raise RuntimeError("GenerateCypher action not available in registry")
+
+
+def execute_cypher_query(
+    query: str,
+    parameters: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
+    """Run a Cypher query against Neo4j."""
+    if NEO4J_DRIVER is None:
+        raise RuntimeError("Neo4j driver is not initialized")
+    with NEO4J_DRIVER.session() as session:
+        result = session.run(query, **(parameters or {}))
+        return [record.data() for record in result]
+
+
+def format_records_as_sources(records: List[Dict[str, Any]]) -> List[Source]:
+    """Convert Neo4j rows to user-facing Source objects."""
+    sources: List[Source] = []
+    for idx, record in enumerate(records[:MAX_GRAPH_SOURCES]):
+        subj = record.get("subject") or {}
+        obj = record.get("object") or {}
+        predicate = record.get("predicate") or "RELATED_TO"
+        pmids = record.get("pmids") or []
+        evidence = record.get("evidence") or []
+
+        subj_label = subj.get("name") or subj.get("text") or subj.get("id") or "Subject"
+        obj_label = obj.get("name") or obj.get("text") or obj.get("id") or "Object"
+        label = f"{subj_label} --[{predicate}]→ {obj_label}"
+
+        snippet = None
+        if isinstance(evidence, list) and evidence:
+            first = evidence[0]
+            if isinstance(first, dict):
+                snippet = first.get("sentence") or first.get("text")
+            elif isinstance(first, str):
+                snippet = first
+        if not snippet:
+            snippet = json.dumps(
+                {"subject": subj_label, "predicate": predicate, "object": obj_label},
+                indent=2,
+            )
+
+        sources.append(
+            Source(
+                label=label,
+                pmid=str(pmids[0]) if pmids else None,
+                snippet=snippet,
+            )
+        )
+    return sources
+
+
+def build_cypher_answer(records: List[Dict[str, Any]]) -> str:
+    """Create a natural-language summary of Cypher results."""
+    if not records:
+        return "The knowledge graph does not contain matching facts for this question."
+
+    def describe(node: Dict[str, Any]) -> str:
+        if not node:
+            return "Unknown entity"
+        name = node.get("name") or node.get("text") or node.get("id") or "Unknown entity"
+        node_class = node.get("class")
+        return f"{name} ({node_class})" if node_class else name
+
+    lines: List[str] = []
+    for record in records[:MAX_GRAPH_SOURCES]:
+        subj = describe(record.get("subject"))
+        obj = describe(record.get("object"))
+        predicate = record.get("predicate") or "RELATED_TO"
+        pmids = record.get("pmids") or []
+        sentence = None
+        evidence = record.get("evidence") or []
+        if isinstance(evidence, list):
+            for item in evidence:
+                if isinstance(item, dict) and item.get("sentence"):
+                    sentence = item["sentence"]
+                    break
+                if isinstance(item, str):
+                    sentence = item
+                    break
+        line = f"{subj} --[{predicate}]→ {obj}"
+        if pmids:
+            line += f" [PMID(s): {', '.join(pmids[:2])}]"
+        if sentence:
+            line += f" — Evidence: {sentence}"
+        lines.append(line)
+
+    summary = f"Knowledge graph returned {len(records)} result(s)."
+    if lines:
+        summary += " Key matches:\n- " + "\n- ".join(lines)
+    return summary
+
+
+def build_relation_context(records: List[Dict[str, Any]]) -> str:
+    """Format graph triples into text snippets for LLM grounding."""
+    context_lines: List[str] = []
+    for record in records[:40]:
+        subj = record.get("subject") or {}
+        obj = record.get("object") or {}
+        predicate = record.get("predicate") or "RELATED_TO"
+        pmids = record.get("pmids") or []
+        evidence = record.get("evidence") or []
+
+        def fmt(node: Dict[str, Any]) -> str:
+            name = node.get("name") or node.get("text") or node.get("id") or "UNKNOWN"
+            n_cls = node.get("class")
+            return f"{name} ({n_cls})" if n_cls else name
+
+        line = f"{fmt(subj)} --[{predicate}]→ {fmt(obj)}"
+        if pmids:
+            line += f"; PMIDs: {', '.join(pmids[:3])}"
+
+        sentence = None
+        if isinstance(evidence, list):
+            for ev in evidence:
+                if isinstance(ev, dict) and ev.get("sentence"):
+                    sentence = ev["sentence"]
+                    break
+                if isinstance(ev, str):
+                    sentence = ev
+                    break
+        if sentence:
+            line += f"; Evidence: {sentence}"
+
+        context_lines.append(line)
+
+    return "\n".join(context_lines)
+
+
+# -----------------------------
 # Startup: build index + load KG
 # -----------------------------
 @app.on_event("startup")
@@ -187,6 +350,8 @@ def on_startup():
     RAG_INDEX = build_rag_index()
     print("[Startup] Loading KG relations...")
     RELATIONS = load_relations(RELATIONS_PATH)
+    print("[Startup] Initializing Cypher components...")
+    init_cypher_components()
     print("[Startup] Ready.")
 
 
@@ -227,195 +392,74 @@ def answer_with_rag(question: str) -> QueryResponse:
 
 
 # -----------------------------
-# KG relation selector (question-aware but general)
+# Mode: KG (Cypher-over-Neo4j)
 # -----------------------------
-def select_kg_relations_for_question(
-    question: str,
-    relations: List[Dict],
-    limit: int = 40,
-) -> List[Dict]:
+def answer_with_kg(question: str) -> QueryResponse:
     """
-    Heuristic selector for KG relations based on the question text.
-
-    Goal:
-    - Use simple signals (talazoparib/PARPi mentions, resistance words, etc.)
-      and schema hints (subject class, predicate) to pick a focused subset
-      of relations as context for the LLM.
-    - Simple, robust, and deterministic: good for a demo + paper.
+    Convert the user's question into a Cypher query via CT-Engine actions,
+    execute it against Neo4j, and summarize the results.
     """
-    q = question.lower()
+    if GENERATE_CYPHER_ACTION is None:
+        raise RuntimeError("Cypher action registry not initialized")
 
-    # 1) Base filter: keep relations that mention talazoparib / PARPi / PARP inhibitor
-    base_rels: List[Dict] = []
-    for r in relations:
-        subj = r.get("subject", {})
-        obj = r.get("object", {})
-        subj_text = str(subj.get("text", "")).lower()
-        obj_text = str(obj.get("text", "")).lower()
-        if (
-            "talazoparib" in subj_text
-            or "talazoparib" in obj_text
-            or "parpi" in subj_text
-            or "parpi" in obj_text
-            or "parp inhibitor" in subj_text
-            or "parp inhibitor" in obj_text
-        ):
-            base_rels.append(r)
-
-    # If nothing clearly talazoparib/PARPi-related, just return a small sample
-    if not base_rels:
-        return relations[:limit]
-
-    rels = base_rels
-
-    # 2) If the question mentions genes, focus on gene-like subjects
-    if "gene" in q or "genes" in q:
-        rels_gene = [
-            r
-            for r in rels
-            if r.get("subject", {}).get("class") in ("Gene", "Protein")
-        ]
-        if rels_gene:
-            rels = rels_gene
-
-    # 3) If the question mentions resistance, focus on resistance-related predicates
-    if "resistance" in q or "resistant" in q:
-        resistance_preds = {
-            "confers_resistance_to",
-            "upregulated_in_resistance",
-            "downregulated_in_resistance",
-            "associated_with_resistance_to",
-            "predicts_resistance_to",
-        }
-        rels_res = [r for r in rels if r.get("predicate") in resistance_preds]
-        if rels_res:
-            rels = rels_res
-
-    # (Future: you can add similar blocks for "combination", "biomarker", etc.)
-
-    return rels[:limit]
-
-
-# -----------------------------
-# Mode: KG (LLM-over-KG)
-# -----------------------------
-def kg_answer_with_llm(question: str) -> QueryResponse:
-    """
-    Use a question-aware subset of KG relations as context and let an LLM
-    generate a natural-language answer grounded only in those relations.
-
-    Sources are *exact sentence snippets* from those same relations,
-    each labeled with its PMID. This is the most faithful and interpretable
-    evidence from the KG.
-    """
-    if not RELATIONS:
+    action_output = GENERATE_CYPHER_ACTION.execute(query=question)
+    if not action_output.success:
         return QueryResponse(
-            answer="Knowledge graph is not available (no relations loaded).",
+            answer=f"Failed to generate Cypher query: {action_output.error}",
             sources=[],
         )
 
-    # 1) Select relevant relations based on question + simple schema heuristics
-    rel_for_context = select_kg_relations_for_question(question, RELATIONS, limit=40)
+    payload = action_output.result
+    if isinstance(payload, dict):
+        cypher_query = payload.get("query")
+        parameters = payload.get("parameters", {})
+    else:
+        cypher_query = str(payload)
+        parameters = {}
 
-    if not rel_for_context:
+    if not cypher_query:
         return QueryResponse(
-            answer="The knowledge graph does not contain any relations clearly related to this question.",
+            answer="Cypher generator did not return a query.",
             sources=[],
         )
 
-    # 2) Format KG context for the LLM
-    lines: List[str] = []
-    for r in rel_for_context:
-        subj = r.get("subject", {})
-        obj = r.get("object", {})
-        subj_text = subj.get("text", "UNKNOWN_SUBJECT")
-        subj_class = subj.get("class")
-        obj_text = obj.get("text", "UNKNOWN_OBJECT")
-        obj_class = obj.get("class")
-        pred = r.get("predicate", "UNKNOWN_PREDICATE")
-        pmids = r.get("pmids", [])
-        pmid_str = ", ".join(pmids) if pmids else "N/A"
-        line = f"{subj_text} ({subj_class}) --[{pred}]→ {obj_text} ({obj_class}); PMIDs: {pmid_str}"
-        lines.append(line)
+    try:
+        records = execute_cypher_query(cypher_query, parameters)
+    except Exception as exc:
+        return QueryResponse(
+            answer=f"Error executing Cypher query: {exc}",
+            sources=[],
+        )
 
-    kg_context = "\n".join(lines)
+    if not records:
+        return QueryResponse(
+            answer="The knowledge graph does not contain matching facts for this question.",
+            sources=[],
+        )
 
-    # 3) Ask LLM to answer using ONLY these relations
-    llm = OpenAI(model="gpt-4.1-mini")
+    context = build_relation_context(records)
     prompt = f"""
-You are a biomedical assistant. You are given a set of knowledge-graph relations
-about talazoparib and related entities.
-
-Each relation has the form:
-  SUBJECT (class) --[predicate]→ OBJECT (class); PMIDs: ...
-
-Use ONLY these relations as your source of truth. Do not invent new genes, drugs,
-mechanisms, or clinical outcomes that are not supported by these relations.
-If the answer is not clearly supported by the relations, explicitly say that the
-knowledge graph does not contain enough information to answer the question.
+You are a biomedical assistant. Use ONLY the provided relations to answer the user's question.
+If the relations do not support an answer, explicitly say so.
 
 Relations:
-{kg_context}
+{context}
 
 User question: {question}
 
-Now, answer the question in clear, concise natural language, referencing genes,
-drugs, pathways, or biomarkers from the relations where appropriate. If useful,
-you may mention PMIDs as evidence.
+Provide a concise answer grounded in the relations above, citing genes, drugs, and PMIDs when helpful.
 """
-    completion = llm.complete(prompt)
-    answer_text = getattr(completion, "text", str(completion)).strip()
 
-    # 4) Build sources directly from the SAME relations (sentence-level evidence)
-    max_sources = 10
-    seen_pairs = set()  # (pmid, snippet) to dedup
-    source_objs: List[Source] = []
-
-    for r in rel_for_context:
-        sentences = r.get("sentences", [])
-        if not sentences:
-            # Fallback: relation-level only if no sentence detail exists
-            pmids = r.get("pmids", [])
-            pmid = pmids[0] if pmids else None
-            label = f"Snippet from PMID {pmid}" if pmid else "Snippet from KG relation (no PMID)"
-            key = (pmid, None)
-            if key in seen_pairs:
-                continue
-            seen_pairs.add(key)
-            source_objs.append(
-                Source(
-                    label=label,
-                    pmid=str(pmid) if pmid is not None else None,
-                    snippet=None,
-                )
-            )
-        else:
-            for s in sentences:
-                pmid = s.get("pmid") or (r.get("pmids") or [None])[0]
-                sentence = s.get("sentence")
-                if not sentence:
-                    continue
-                key = (pmid, sentence)
-                if key in seen_pairs:
-                    continue
-                seen_pairs.add(key)
-                label = f"Snippet from PMID {pmid}" if pmid else "Snippet from KG"
-                source_objs.append(
-                    Source(
-                        label=label,
-                        pmid=str(pmid) if pmid is not None else None,
-                        snippet=sentence,
-                    )
-                )
-                if len(source_objs) >= max_sources:
-                    break
-
-        if len(source_objs) >= max_sources:
-            break
+    llm = OpenAI(model="gpt-4.1-mini")
+    try:
+        completion = llm.complete(prompt)
+        answer_text = getattr(completion, "text", str(completion)).strip()
+    except Exception as exc:
+        answer_text = f"Failed to synthesize answer from relations: {exc}"
 
     return QueryResponse(
         answer=answer_text,
-        sources=source_objs,
+        sources=format_records_as_sources(records),
     )
 
 
@@ -433,7 +477,7 @@ def query(req: QueryRequest):
     if mode == "rag":
         return answer_with_rag(req.question)
     elif mode == "kg":
-        return kg_answer_with_llm(req.question)
+        return answer_with_kg(req.question)
     else:
         return QueryResponse(
             answer=f"Unknown mode '{req.mode}'. Use 'rag' or 'kg'.",
