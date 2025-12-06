@@ -7,7 +7,7 @@ const API_URL =
   import.meta.env.VITE_API_URL || "http://localhost:8000/query";
 
 function App() {
-  const [mode, setMode] = useState("rag"); // "rag" or "kg"
+  const [mode, setMode] = useState("rag"); // "rag", "kg", or "kg_agent"
   const [question, setQuestion] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
@@ -52,7 +52,12 @@ function App() {
     }
   };
 
-  const modeLabel = mode === "rag" ? "Baseline RAG" : "Knowledge Graph";
+  const modeLabel =
+    mode === "rag"
+      ? "Baseline RAG"
+      : mode === "kg"
+      ? "CT-Engine Cypher"
+      : "KG-first Agent";
 
   return (
     <div className="page">
@@ -74,7 +79,13 @@ function App() {
           className={`pill ${mode === "kg" ? "active" : ""}`}
           onClick={() => setMode("kg")}
         >
-          Knowledge Graph
+          KG (Cypher)
+        </div>
+        <div
+          className={`pill ${mode === "kg_agent" ? "active" : ""}`}
+          onClick={() => setMode("kg_agent")}
+        >
+          KG-first Agent
         </div>
       </div>
 
