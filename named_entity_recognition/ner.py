@@ -194,10 +194,8 @@ class NamedEntityRecognition:
             )
             return []
         entities = payload.get("entities", [])
-        normalized = []
-        for e in entities:
-            normalized_entity = self.normalizer.normalize(e, context=sentence.text)
-            normalized.append(normalized_entity)
+        normalized_umls = self.normalizer.normalize_umls(entities)
+        normalized = self.normalizer.normalize_fuzzy(normalized_umls)
         return normalized
 
     def _close_request_file(self) -> None:

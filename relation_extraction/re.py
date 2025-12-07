@@ -53,9 +53,7 @@ class RelationExtraction:
         for pred in predicates:
             guideline = guidelines.get(pred.name, {})
             definition = guideline.get("definition", pred.description) or pred.description
-            section = f"{pred.name}: {definition}\n"
-            section += f"Domain: {', '.join(pred.domain) if pred.domain else 'any'}; "
-            section += f"Range: {', '.join(pred.range) if pred.range else 'any'}"
+            section = f"[{', '.join(pred.domain)}] --[{pred.name}: {definition}] -> [{', '.join(pred.range)}]"
             sections.append(section)
         return "\n".join(sections)
 
@@ -63,7 +61,7 @@ class RelationExtraction:
         predicate_text = self._build_predicate_sections(predicates)
         entity_lines = []
         for idx, ent in enumerate(entities):
-            entity_lines.append(f"[{idx}] {ent.get('text')} (class={ent.get('class')})")
+            entity_lines.append(f"[{idx}] ({ent.get('class')}: {ent.get('text')})")
         entities_block = "\n".join(entity_lines)
 
         return (
@@ -75,7 +73,7 @@ class RelationExtraction:
             "return a triple for each object.\n\n"
             f"Sentence: {sentence['text']}\n\n"
             f"Entities:\n{entities_block}\n\n"
-            f"Allowed predicates:\n{predicate_text}\n\n"
+            f"Allowed predicates [<domain_classes>] --[<predicate_name>: <predicate_definition>] -> [<range_classes>]:\n{predicate_text}\n\n"
             "Return JSON exactly as: "
             '{"triples":[{"subject": <entity_index>, "predicate": "<predicate_name>", '
             '"object": <entity_index>, "confidence": <0-1 float>}]}'

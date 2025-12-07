@@ -75,10 +75,6 @@ classes:
   Finding:
     is_a: BIOLINK:ClinicalFinding
     slots: [description, finding_type, context]
-  
-  Paper:
-    is_a: BIOLINK:Publication
-    slots: [pmid, title, year, journal, doi]
 
 slots:
   # Gene-Chemical relations

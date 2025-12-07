@@ -1,7 +1,7 @@
 import logging
 import re
 from difflib import SequenceMatcher
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, List
 
 from .loader import SchemaLoader
 
@@ -37,6 +37,54 @@ class Normalizer:
                 best_score = score
                 best_id = existing_id
         return best_id, best_score
+    
+    def normalize_umls(self, entities: List[Dict]) -> List[Dict]:
+        """Return UMLS-normalized entities with id UMLS:CUI or None"""
+        normalized = []
+
+        for entity in entities:
+            cls = entity.get("class")
+            entity_text = entity.get("text", "")
+            canonical_form = entity.get("canonical_form") or entity_text
+
+            chosen: Optional[str] = None
+            if self.umls_client and cls in ["Gene", "Chemical", "Disease", "Phenotype", "Pathway", "Mutation"]:
+                umls_cui = self.umls_client.search_concept(canonical_form)
+                if umls_cui:
+                    chosen = f"UMLS:{umls_cui}"
+                    self._canonical_to_id[canonical_form] = chosen
+
+            normalized_entity = entity.copy()
+            normalized_entity["id"] = chosen
+            if canonical_form:
+                normalized_entity["canonical_form"] = canonical_form
+            
+            normalized.append(normalized_entity)
+
+        return normalized
+    
+    def normalize_fuzzy(self, entities: List[Dict]) -> List[Dict]:
+        """Return fuzzy-matched normalized entities by comparing with UMLS-normalized entities"""
+        normalized = []
+        
+        for entity in entities:
+            if entity["id"]:
+                normalized.append(entity)
+            else:
+                entity_text = entity.get("text", "")
+                canonical_form = entity.get("canonical_form") or entity_text
+
+                chosen: Optional[str] = None
+                match_id, score = self._fuzzy_match_canonical(canonical_form)
+                if match_id and score >= 0.9:
+                    chosen = match_id
+
+                normalized_entity = entity.copy()
+                normalized_entity["id"] = chosen
+
+                normalized.append(normalized_entity)
+
+        return normalized
 
     def normalize(self, entity: Dict, context: str = "") -> Dict:
         cls = entity.get("class")
