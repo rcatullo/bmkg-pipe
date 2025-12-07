@@ -8,7 +8,6 @@
 
 import json
 import os
-import sys
 from pathlib import Path
 from typing import List, Dict, Optional, Any
 
@@ -23,25 +22,13 @@ from llama_index.llms.openai import OpenAI
 from llama_index.core.node_parser import SentenceSplitter
 
 from neo4j import GraphDatabase
-
-# Add CT-Engine to path for semantic_parser imports
-ROOT_DIR = Path(__file__).parent
-CT_ENGINE_DIR = ROOT_DIR / "CT-Engine"
-if str(CT_ENGINE_DIR) not in sys.path:
-    sys.path.insert(0, str(CT_ENGINE_DIR))
-
 from semantic_parser.modules.cypher import create_action_registry
-
-from qa_agent import KgQaAgent
-from model.llm_client import LLMClient
-from model.umls_client import UMLSClient
-from schema import SchemaLoader
-from utils import load_config
 
 
 # -----------------------------
 # Paths
 # -----------------------------
+ROOT_DIR = Path(__file__).parent
 DATA_DIR = ROOT_DIR / "data"
 FRONTEND_DIR = ROOT_DIR / "frontend"
 
@@ -68,7 +55,7 @@ app.add_middleware(
 # Request / Response models
 # -----------------------------
 class QueryRequest(BaseModel):
-    mode: str      # "rag", "kg", or "kg_agent"
+    mode: str      # "rag" or "kg"
     question: str
 
 
@@ -91,7 +78,6 @@ RELATIONS: List[Dict] = []
 CYTHER_REGISTRY = None
 GENERATE_CYPHER_ACTION = None
 NEO4J_DRIVER = None
-KG_AGENT: Optional[KgQaAgent] = None
 
 NEO4J_URI = os.getenv("NEO4J_URI", "neo4j+s://4e9b2d24.databases.neo4j.io")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
@@ -213,8 +199,8 @@ def load_relations(path: Path) -> List[Dict]:
 # Cypher / Neo4j helpers
 # -----------------------------
 def init_cypher_components() -> None:
-    """Initialize Neo4j driver, CT-Engine registry, and KG QA agent."""
-    global CYTHER_REGISTRY, GENERATE_CYPHER_ACTION, NEO4J_DRIVER, KG_AGENT
+    """Initialize Neo4j driver and Cypher action registry."""
+    global CYTHER_REGISTRY, GENERATE_CYPHER_ACTION, NEO4J_DRIVER
 
     if NEO4J_DRIVER is None:
         NEO4J_DRIVER = GraphDatabase.driver(
@@ -222,27 +208,12 @@ def init_cypher_components() -> None:
             auth=(NEO4J_USER, NEO4J_PASSWORD),
         )
 
-    CYTHER_REGISTRY = create_action_registry()
+    # Get UMLS API key for concept normalization
+    umls_api_key = os.getenv("UMLS_API_KEY")
+    CYTHER_REGISTRY = create_action_registry(umls_api_key=umls_api_key)
     GENERATE_CYPHER_ACTION = CYTHER_REGISTRY.get_action("GenerateCypher")
     if GENERATE_CYPHER_ACTION is None:
         raise RuntimeError("GenerateCypher action not available in registry")
-
-    # Initialize dependencies for entity linking
-    config = load_config()
-    schema_loader = SchemaLoader()
-    llm_client = LLMClient(config=config)
-    umls_client = UMLSClient(
-        api_key=config.get("umls", {}).get("api_key", ""),
-        api_url=config.get("umls", {}).get("api_url", "https://uts-ws.nlm.nih.gov/rest"),
-    )
-
-    # Initialize KG-first QA agent with dependencies
-    KG_AGENT = KgQaAgent(
-        NEO4J_DRIVER,
-        llm_client=llm_client,
-        schema_loader=schema_loader,
-        umls_client=umls_client,
-    )
 
 
 def execute_cypher_query(
@@ -393,7 +364,7 @@ def answer_with_rag(question: str) -> QueryResponse:
     if RAG_INDEX is None:
         raise RuntimeError("RAG index not initialized")
 
-    llm = OpenAI(model="gpt-4.1-mini")
+    llm = OpenAI(model="gpt-5-nano")
     query_engine = RAG_INDEX.as_query_engine(
         llm=llm,
         similarity_top_k=5,
@@ -454,9 +425,20 @@ def answer_with_kg(question: str) -> QueryResponse:
             sources=[],
         )
 
+    # Print Cypher query and parameters for debugging
+    print("\n" + "="*80)
+    print("CYPHER QUERY:")
+    print("="*80)
+    print(cypher_query)
+    print("\nPARAMETERS:")
+    print(parameters)
+    print("="*80 + "\n")
+
     try:
         records = execute_cypher_query(cypher_query, parameters)
+        print(f"RETURNED {len(records)} RECORDS\n")
     except Exception as exc:
+        print(f"ERROR EXECUTING CYPHER QUERY: {exc}\n")
         return QueryResponse(
             answer=f"Error executing Cypher query: {exc}",
             sources=[],
@@ -470,41 +452,45 @@ def answer_with_kg(question: str) -> QueryResponse:
 
     context = build_relation_context(records)
     prompt = f"""
-You are a biomedical assistant. Use ONLY the provided relations to answer the user's question.
-If the relations do not support an answer, explicitly say so.
+You are a biomedical assistant. Answer the user's question using ONLY the provided knowledge graph relations.
 
-Relations:
+IMPORTANT: You should reason about connections between relations. For example:
+- If relation A connects X to Y, and relation B connects Y to Z, then X is indirectly related to Z through Y
+- Pathway relationships can be inferred: if A inhibits pathway P, and pathway P affects process Q, then A may affect Q
+- Look for chains of relationships that answer the question, not just direct matches
+- Include ALL relevant entities mentioned in the relations, even if they represent the opposite relationship (e.g., if asked about resistance, mention genes associated with sensitivity as relevant context, explaining that their absence or wild-type status may relate to resistance)
+
+Relations from knowledge graph:
 {context}
 
 User question: {question}
 
-Provide a concise answer grounded in the relations above, citing genes, drugs, and PMIDs when helpful.
+Instructions:
+1. Analyze ALL relations to find direct and indirect connections relevant to the question
+2. Include ALL entities (genes, drugs, pathways) mentioned in the relations that are relevant to the question, even if the relationship is the inverse (e.g., sensitivity vs resistance)
+3. For inverse relationships, explain the connection clearly (e.g., "BRCA1 mutations predict sensitivity to talazoparib, so wild-type BRCA1 or its absence may be associated with resistance")
+4. Provide your answer in natural, conversational language - do NOT explicitly mention "relations", "knowledge graph", or the relation format (e.g., don't say "Based on the relation X→Y")
+5. Write as if you're explaining biomedical concepts naturally, citing PMIDs when helpful
+6. If the relations truly don't support an answer, say so explicitly
+7. Connect concepts naturally - explain biological mechanisms and relationships in plain language
+
+Provide a clear, comprehensive natural language answer that mentions all relevant entities from the relations:
 """
 
-    llm = OpenAI(model="gpt-4.1-mini")
+    llm = OpenAI(model="gpt-5-nano")
     try:
         completion = llm.complete(prompt)
         answer_text = getattr(completion, "text", str(completion)).strip()
     except Exception as exc:
         answer_text = f"Failed to synthesize answer from relations: {exc}"
 
-    return QueryResponse(
-        answer=answer_text,
-        sources=format_records_as_sources(records),
-    )
+    # Print the answer before returning
+    print("\n" + "="*80)
+    print("GENERATED ANSWER:")
+    print("="*80)
+    print(answer_text)
+    print("="*80 + "\n")
 
-
-# -----------------------------
-# Mode: KG-first QA agent
-# -----------------------------
-def answer_with_kg_agent(question: str) -> QueryResponse:
-    """
-    Use the KG-first QA agent (Anchor → Expand → Explain) instead of raw Cypher.
-    """
-    if KG_AGENT is None:
-        raise RuntimeError("KG QA agent not initialized")
-
-    answer_text, records, _debug = KG_AGENT.answer(question)
     return QueryResponse(
         answer=answer_text,
         sources=format_records_as_sources(records),
@@ -526,11 +512,9 @@ def query(req: QueryRequest):
         return answer_with_rag(req.question)
     elif mode == "kg":
         return answer_with_kg(req.question)
-    elif mode == "kg_agent":
-        return answer_with_kg_agent(req.question)
     else:
         return QueryResponse(
-            answer=f"Unknown mode '{req.mode}'. Use 'rag', 'kg', or 'kg_agent'.",
+            answer=f"Unknown mode '{req.mode}'. Use 'rag' or 'kg'.",
             sources=[],
         )
 

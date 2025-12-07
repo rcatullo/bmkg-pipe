@@ -1,5 +1,5 @@
 llm:
-  model: "gpt-5-nano-2025-08-07"
+  model: "gpt-5-nano"
   max_requests_per_minute: 250
   max_tokens_per_minute: 100000
   request_url: "https://api.openai.com/v1/chat/completions"

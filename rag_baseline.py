@@ -62,7 +62,7 @@ def build_index_in_memory(
 def run_query(
     index: VectorStoreIndex,
     query: str,
-    model: str = "gpt-4.1-mini",
+    model: str = "gpt-5-nano",
     top_k: int = 5,
 ):
     """Run a single RAG query and return the LlamaIndex response."""
@@ -106,7 +106,7 @@ def main():
     parser.add_argument(
         "--model",
         type=str,
-        default="gpt-4.1-mini",
+        default="gpt-5-nano",
         help="OpenAI chat model for RAG generation",
     )
     parser.add_argument(

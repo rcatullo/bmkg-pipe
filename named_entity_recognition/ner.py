@@ -54,7 +54,11 @@ class NamedEntityRecognition:
         if self._requests_handle is None:
             self._prepare_request_file()
         prompt = self._build_prompt(sentence)
-        payload = self.llm.build_chat_completion_kwargs(prompt=prompt, json_mode=True)
+        payload = self.llm.build_chat_completion_kwargs(
+            prompt=prompt,
+            json_mode=True,
+            system_prompt=self._system_prompt(),
+        )
         payload["metadata"] = {
             "pmid": sentence.pmid,
             "sentence_id": sentence.sentence_id,
@@ -62,21 +66,24 @@ class NamedEntityRecognition:
         }
         self._requests_handle.write(json.dumps(payload) + "\n")
     
+    def _system_prompt(self) -> str:
+        return (
+            "You are a careful biomedical named entity recognizer. Extract entities that "
+            "fit the provided classes, with precise character offsets. Respond only with "
+            "valid JSON matching the requested schema."
+        )
+
     def _build_prompt(self, sentence: Sentence) -> str:
         class_list = ", ".join(self.classes)
         return (
-            "Identify biomedical entities for the sentence below (if any). If the entity doesn't fit confidently into one of the given classes, even if it is biomedical in nature, omit it.\n"
-            f"Classes: {class_list}.\n\n"
-            "For each entity, also normalize it to its most appropriate canonical form for UMLS database search. "
-            "Convert to the standard canonical form that would be found in medical databases. Consider:\n"
-            "- Gene symbols should use official HGNC notation (e.g., \"p53\" → \"TP53\")\n"
-            "- Diseases should use standard medical terminology (e.g., \"breast cancer\" → \"breast neoplasms\")\n"
-            "- Chemicals should use standard chemical names (e.g., \"aspirin\" → \"acetylsalicylic acid\")\n"
-            "- Proteins should use standard protein names\n"
-            "- Resolve abbreviations and synonyms to canonical forms\n\n"
-            "If the entity is already in canonical form or no normalization is needed, use the original text as the canonical form.\n"
-            "If the entity cannot be normalized, set canonical_form to null.\n\n"
-            "Return JSON with `entities`: [{text, class, start, end, ids, canonical_form}].\n"
+            "Extract biomedical entities from the sentence. Only return entities that fit the allowed classes. "
+            "Use character offsets on the original sentence text (start inclusive, end exclusive). "
+            "Normalize text to a canonical biomedical form when obvious (e.g., HGNC symbols for genes, "
+            "standard disease/chemical names); if not clear, set canonical_form to null. "
+            "Do not invent entities; if uncertain, omit.\n"
+            f"Classes: {class_list}\n\n"
+            "Return JSON: {\"entities\": [{\"text\": str, \"class\": str, \"start\": int, \"end\": int, "
+            "\"canonical_form\": str|null}]}. If none, use an empty list.\n"
             f"Sentence: {sentence.text}"
         )
 

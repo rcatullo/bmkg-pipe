@@ -1,3 +1,4 @@
+import argparse
 import logging
 import sys
 from pathlib import Path
@@ -13,7 +14,7 @@ from named_entity_recognition import NamedEntityRecognition
 from relation_extraction import RelationExtraction
 from schema import SchemaLoader, Normalizer
 import utils as utils
-from utils import PostProcessor, PairGenerator
+from utils import PostProcessor, PredicateFilter
 
 logger = logging.getLogger("pipeline.run")
 
@@ -57,25 +58,39 @@ def build_components():
     )
     normalizer = Normalizer(schema, llm_client=llm, umls_client=umls)
     ner = NamedEntityRecognition(schema, normalizer, llm, config)
-    pair_generator = PairGenerator(schema)
+    predicate_filter = PredicateFilter(schema)
     re = RelationExtraction(llm, config, schema=schema)
     postprocessor = PostProcessor()
-    return ner, pair_generator, re, postprocessor
+    return ner, predicate_filter, re, postprocessor
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Biomedical KG pipeline")
+    parser.add_argument("--input", dest="input_file", help="Override input JSONL path")
+    parser.add_argument("--output", dest="output_file", help="Override output JSONL path")
+    parser.add_argument("--log", dest="log_file", help="Override relation log JSONL path")
+    return parser.parse_args()
 
 
 def main():
+    args = parse_args()
     config = utils.load_config()
+    if args.input_file:
+        config["data"]["input_file"] = args.input_file
+    if args.output_file:
+        config["data"]["output_file"] = args.output_file
+    if args.log_file:
+        config["logging"]["relation_log_file"] = args.log_file
     configure_logging(config)
 
     log_stage("build_components")
-    ner, pair_generator, re, postprocessor = build_components()
+    ner, predicate_filter, re, postprocessor = build_components()
     log_stage("build_components_complete")
     input_path = Path(config["data"]["input_file"])
     relation_log_path = Path(config["logging"]["relation_log_file"])
     raw_results = []
     sentence_count = 0
     entity_total = 0
-    pair_total = 0
 
     logger.info(
         "Starting pipeline input=%s output=%s log=%s",
@@ -100,32 +115,29 @@ def main():
             )
             continue
         entity_total += len(entities)
-        log_stage(
-            "pair_generation",
-            pmid=sentence.pmid,
-            sentence_id=sentence.sentence_id,
-            entity_count=len(entities),
-        )
-        pairs = pair_generator.generate(sentence, entities)
-        pair_total += len(pairs)
-        if not pairs:
+        allowed_preds = predicate_filter.for_entities(entities)
+        if not allowed_preds:
             continue
         log_stage(
             "relation_extraction",
             pmid=sentence.pmid,
             sentence_id=sentence.sentence_id,
-            pair_count=len(pairs),
+            pair_count=len(allowed_preds),
         )
-        re.add_pairs(pairs)
+        re.add_sentence(
+            {"pmid": sentence.pmid, "sentence_id": sentence.sentence_id, "text": sentence.text},
+            entities,
+            allowed_preds,
+        )
         if sentence_count and sentence_count % 50 == 0:
             logger.info(
-                "Processed %d sentences (%d entities, %d pairs so far)",
+                "Processed %d sentences (%d entities, %d predicate groups so far)",
                 sentence_count,
                 entity_total,
-                pair_total,
+                re.total_requests,
             )
 
-    log_stage("relation_execute", total_pairs=re.total_pairs)
+    log_stage("relation_execute", total_pairs=re.total_requests)
     for classification in re.run():
         utils.log_result(classification, relation_log_path)
         raw_results.append(classification)

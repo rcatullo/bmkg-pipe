@@ -37,7 +37,7 @@ class AzureOpenAIClient:
         azure_endpoint: Optional[str] = "https://ovalnairr.openai.azure.com/",
         api_key: Optional[str] = None,
         api_version: str = "2024-12-01-preview",
-        deployment_name: str = "gpt-4.1",
+        deployment_name: str = "gpt-5-nano",
     ):
         """
         Initialize the Azure OpenAI client.

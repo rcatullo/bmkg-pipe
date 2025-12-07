@@ -19,13 +19,21 @@ class LLMClient:
         prompt: str,
         temperature: Optional[float] = None,
         json_mode: bool = False,
+        system_prompt: Optional[str] = None,
+        messages: Optional[list[dict[str, str]]] = None,
     ) -> Dict[str, Any]:
+        """Build an OpenAI chat completion payload with task-specific system prompts."""
+        final_messages = messages
+        if final_messages is None:
+            sys_prompt = system_prompt or "You are a biomedical relation extraction assistant."
+            final_messages = [
+                {"role": "system", "content": sys_prompt},
+                {"role": "user", "content": prompt},
+            ]
+
         kwargs: Dict[str, Any] = {
             "model": self.config["llm"]["model"],
-            "messages": [
-                {"role": "system", "content": "You are a biomedical relation extraction assistant."},
-                {"role": "user", "content": prompt},
-            ],
+            "messages": final_messages,
         }
         if temperature is not None:
             kwargs["temperature"] = temperature
@@ -38,11 +46,13 @@ class LLMClient:
         prompt: str,
         temperature: Optional[float] = None,
         json_mode: bool = False,
+        system_prompt: Optional[str] = None,
     ) -> Dict[str, Any]:
         kwargs = self.build_chat_completion_kwargs(
             prompt=prompt,
             temperature=temperature,
             json_mode=json_mode,
+            system_prompt=system_prompt,
         )
         logger.debug(
             "LLM request model=%s json_mode=%s temperature=%s prompt=%s",

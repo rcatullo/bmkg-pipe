@@ -53,7 +53,7 @@ app.add_middleware(
 class QueryRequest(BaseModel):
     query: str
     max_steps: int = 10
-    model: str = "o3"  # "gpt-5", "o3", "gpt-4o", etc.
+    model: str = "gpt-5-nano"  # default model
     engine: str = "react"  # "react" or "baseline"
 
 

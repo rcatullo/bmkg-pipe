@@ -20,7 +20,7 @@ class KgQaAgent:
         llm_client: Any,  # LLMClient
         schema_loader: Any,  # SchemaLoader
         umls_client: Any,  # UMLSClient
-        llm_model: str = "gpt-4.1-mini",
+        llm_model: str = "gpt-5-nano",
     ):
         self.driver = driver
         self.entity_linker = EntityLinker(driver, llm_client, schema_loader, umls_client)
