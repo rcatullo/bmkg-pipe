@@ -68,8 +68,8 @@ class NamedEntityRecognition:
     
     def _system_prompt(self) -> str:
         return (
-            "You are a careful biomedical named entity recognizer. Extract entities that "
-            "fit the provided classes, with precise character offsets. Respond only with "
+            "You are a careful biomedical named entity recognizer. Extract only entities that "
+            "fit the provided classes. Do not invent entities. Respond only with "
             "valid JSON matching the requested schema."
         )
 
@@ -77,12 +77,10 @@ class NamedEntityRecognition:
         class_list = ", ".join(self.classes)
         return (
             "Extract biomedical entities from the sentence. Only return entities that fit the allowed classes. "
-            "Use character offsets on the original sentence text (start inclusive, end exclusive). "
-            "Normalize text to a canonical biomedical form when obvious (e.g., HGNC symbols for genes, "
-            "standard disease/chemical names); if not clear, set canonical_form to null. "
-            "Do not invent entities; if uncertain, omit.\n"
+            "Normalize text to a canonical biomedical form (e.g., HGNC symbols for genes, "
+            "standard disease/chemical names); if unclear, set canonical_form to null. \n"
             f"Classes: {class_list}\n\n"
-            "Return JSON: {\"entities\": [{\"text\": str, \"class\": str, \"start\": int, \"end\": int, "
+            "JSON schema: {\"entities\": [{\"text\": str, \"class\": str, "
             "\"canonical_form\": str|null}]}. If none, use an empty list.\n"
             f"Sentence: {sentence.text}"
         )

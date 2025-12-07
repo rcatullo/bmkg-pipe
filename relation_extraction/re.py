@@ -252,8 +252,6 @@ class RelationExtraction:
                     "object": object_ent,
                     "predicate": predicate,
                     "confidence": confidence,
-                    "subject_span": subject_ent.get("span"),
-                    "object_span": object_ent.get("span"),
                     "model_name": metadata.get("model_name"),
                     "model_version": metadata.get("model_version"),
                     "prompt_version": metadata.get("prompt_version"),
