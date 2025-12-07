@@ -124,6 +124,7 @@ SENTENCE_RE = re.compile(r"(?<=[.!?])\s+")
 class Sentence:
     pmid: str
     sentence_id: int
+    sentence_ids: List[int]
     text: str
 
 
@@ -134,9 +135,31 @@ def split_text(text: str) -> List[str]:
     return [part.strip() for part in SENTENCE_RE.split(text) if part.strip()]
 
 
-def load_sentences(jsonl_path: Path) -> Iterable[Sentence]:
+def load_sentences(jsonl_path: Path, batch_size: int = 1) -> Iterable[Sentence]:
+    if batch_size <= 0:
+        raise ValueError("batch_size must be a positive integer")
     for record in read_jsonl(jsonl_path):
         pmid = str(record.get("pmid") or "")
         abstract = record.get("abstract") or ""
-        for idx, sentence in enumerate(split_text(abstract)):
-            yield Sentence(pmid=pmid, sentence_id=idx, text=sentence)
+        sentence_parts = split_text(abstract)
+        batch: List[str] = []
+        batch_ids: List[int] = []
+        for idx, sentence in enumerate(sentence_parts):
+            batch.append(sentence)
+            batch_ids.append(idx)
+            if len(batch) == batch_size:
+                yield Sentence(
+                    pmid=pmid,
+                    sentence_id=batch_ids[0],
+                    sentence_ids=list(batch_ids),
+                    text=" ".join(batch),
+                )
+                batch = []
+                batch_ids = []
+        if batch:
+            yield Sentence(
+                pmid=pmid,
+                sentence_id=batch_ids[0],
+                sentence_ids=batch_ids,
+                text=" ".join(batch),
+            )

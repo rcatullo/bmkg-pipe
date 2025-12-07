@@ -62,6 +62,7 @@ class NamedEntityRecognition:
         payload["metadata"] = {
             "pmid": sentence.pmid,
             "sentence_id": sentence.sentence_id,
+            "sentence_ids": sentence.sentence_ids,
             "text": sentence.text,
         }
         self._requests_handle.write(json.dumps(payload) + "\n")
@@ -76,13 +77,13 @@ class NamedEntityRecognition:
     def _build_prompt(self, sentence: Sentence) -> str:
         class_list = ", ".join(self.classes)
         return (
-            "Extract biomedical entities from the sentence. Only return entities that fit the allowed classes. "
+            "Extract biomedical entities from the sentences. Only return entities that fit the allowed classes. "
             "Normalize text to a canonical biomedical form (e.g., HGNC symbols for genes, "
             "standard disease/chemical names); if unclear, set canonical_form to null. \n"
             f"Classes: {class_list}\n\n"
             "JSON schema: {\"entities\": [{\"text\": str, \"class\": str, "
             "\"canonical_form\": str|null}]}. If none, use an empty list.\n"
-            f"Sentence: {sentence.text}"
+            f"Sentences: {sentence.text}"
         )
 
     def run(self) -> Dict[Tuple[str, int], List[Dict]]:

@@ -14,7 +14,6 @@ annotation_guideline:
     decision_rule:
       accept_if:
         - Clear causal language (e.g., "confers resistance", "mediates resistance", "causes resistance")
-        - Includes mechanistic detail or functional validation
         - Specifies drug and context (cancer type, cell line, or patient cohort)
       reject_if:
         - Only correlative or associative language without causal claim
@@ -23,8 +22,7 @@ annotation_guideline:
   
   sensitizes_to:
     definition: >
-      Gene/protein or mutation increases vulnerability to chemical/drug. Include biomarker
-      status if validated.
+      Gene/protein or mutation increases vulnerability to chemical/drug.
     examples:
       positive: >
         BRCA2 loss-of-function mutations sensitize ovarian cancer cells to PARP inhibitors,
@@ -35,17 +33,14 @@ annotation_guideline:
     decision_rule:
       accept_if:
         - Clear statement of increased drug sensitivity or vulnerability
-        - Experimental validation (e.g., IC50, viability assays, clinical outcomes)
         - Specific drug and genetic context provided
       reject_if:
         - Only trend or non-significant association
-        - Speculative without supporting data
         - General statement without specific drug
   
   predicts_response_to:
     definition: >
-      Gene or mutation status predicts treatment response. Specify FDA-approved/investigational
-      biomarker status when applicable.
+      Gene or mutation status predicts treatment response.
     examples:
       positive: >
         ERCC1 expression is an FDA-approved predictive biomarker for platinum-based
@@ -56,18 +51,14 @@ annotation_guideline:
     decision_rule:
       accept_if:
         - Explicit predictive relationship stated
-        - Clinical or regulatory validation mentioned (FDA-approved, validated biomarker)
-        - Clear association between biomarker status and treatment outcome
       reject_if:
         - Exploratory analysis without validation
-        - Contradictory or inconsistent findings
         - No clear prediction of response outcomes
   
   # Gene-Disease Relations
   prognostic_biomarker_in:
     definition: >
-      Gene predicts outcome in specific cancer subtype. Specify ER+, TNBC, HER2+, and
-      validation level.
+      Gene predicts outcome in specific cancer subtype.
     examples:
       positive: >
         Ki67 expression >20% is a validated prognostic biomarker in ER+/HER2- breast
@@ -79,16 +70,14 @@ annotation_guideline:
       accept_if:
         - Clear prognostic relationship (predicts survival, recurrence, progression)
         - Specific cancer subtype mentioned
-        - Statistical support (hazard ratio, p-value) when available
       reject_if:
-        - Only descriptive characterization without outcome prediction
         - No specific cancer subtype
         - Speculative association without data
   
   predictive_biomarker_for:
     definition: >
       Gene predicts treatment response in cancer subtype. Distinguish from prognostic
-      biomarkers. Specify FDA-approved/investigational status.
+      biomarkers.
     examples:
       positive: >
         HER2 amplification is an FDA-approved predictive biomarker for trastuzumab
@@ -150,8 +139,7 @@ annotation_guideline:
   # Gene-Phenotype Relations
   upregulated_in_resistance:
     definition: >
-      Gene upregulated in resistance to specific drug. Specify fold-change, p-value,
-      cell lines tested, acquired vs intrinsic resistance.
+      Gene upregulated in resistance to specific drug.
     examples:
       positive: >
         MDR1 expression was upregulated 8-fold (p<0.001) in acquired paclitaxel-resistant
@@ -171,8 +159,7 @@ annotation_guideline:
   
   downregulated_in_resistance:
     definition: >
-      Gene downregulated in resistance to specific drug. Include fold-change, p-value,
-      and cell lines tested.
+      Gene downregulated in resistance to specific drug.
     examples:
       positive: >
         BRCA1 expression was downregulated 3-fold (p=0.003) in PARP inhibitor-resistant
@@ -191,8 +178,7 @@ annotation_guideline:
   
   correlates_with_survival:
     definition: >
-      Gene expression correlates with overall or progression-free survival. Include
-      hazard ratio and p-value.
+      Gene expression correlates with overall or progression-free survival.
     examples:
       positive: >
         High FOXM1 expression correlated with reduced overall survival in glioblastoma
@@ -274,7 +260,7 @@ annotation_guideline:
   # Gene-Gene Relations
   physically_interacts_with:
     definition: >
-      Protein-protein interaction. Specify method of detection and binding affinity if known.
+      Protein-protein interaction.
     examples:
       positive: >
         Co-immunoprecipitation confirmed that BRCA1 physically interacts with RAD51
@@ -293,8 +279,7 @@ annotation_guideline:
   
   co_expressed_with:
     definition: >
-      Genes show correlated expression across samples. Include correlation coefficient
-      and context.
+      Genes show correlated expression across samples.
     examples:
       positive: >
         ESR1 and PGR expression are highly co-expressed in breast cancer (r=0.85,
@@ -346,7 +331,7 @@ annotation_guideline:
   # Gene-Pathway Relations
   activates:
     definition: >
-      Gene activates pathway. Specify direct/indirect and cancer type where observed.
+      Gene activates pathway.
     examples:
       positive: >
         PI3K activates AKT/mTOR pathway in breast cancer through direct phosphorylation
@@ -405,7 +390,7 @@ annotation_guideline:
   # Chemical-Disease Relations
   approved_for:
     definition: >
-      FDA/EMA approved for cancer subtype. Specify line of therapy and combination/monotherapy.
+      FDA/EMA approved for cancer subtype.
     examples:
       positive: >
         Trastuzumab is FDA-approved for HER2+ metastatic breast cancer as first-line
@@ -425,7 +410,7 @@ annotation_guideline:
   
   in_trials_for:
     definition: >
-      In clinical trials. Specify phase I/II/III and NCT number if available.
+      In clinical trials.
     examples:
       positive: >
         Selumetinib is in phase III trials for uveal melanoma (NCT03672305), showing
@@ -444,7 +429,7 @@ annotation_guideline:
   
   resistance_emerges_in:
     definition: >
-      Resistance commonly emerges in disease. Specify median time to resistance and frequency.
+      Resistance commonly emerges in disease.
     examples:
       positive: >
         Resistance to osimertinib emerges in EGFR-mutant NSCLC with a median time of
@@ -464,7 +449,7 @@ annotation_guideline:
   # Chemical-Pathway Relations
   inhibits:
     definition: >
-      Chemical inhibits pathway. Include IC50/potency and selectivity.
+      Chemical inhibits pathway.
     warning: >
       ⚠️ CRITICAL: Do NOT extract if sentence contains "exploit vulnerability", "in patients with
       alterations", "genes involved in", "HRR", or enumeration patterns ("including X, Y, and Z")
@@ -514,7 +499,7 @@ annotation_guideline:
   # Model-Finding Relations
   observed_in_cell_line:
     definition: >
-      Finding observed in specific cell line. Specify drug concentration and time point.
+      Finding observed in specific cell line.
     examples:
       positive: >
         BRCA1 downregulation was observed in MDA-MB-436 cells treated with 10μM
@@ -552,7 +537,7 @@ annotation_guideline:
   
   observed_in_patient:
     definition: >
-      Finding observed in patient samples. Include sample size and cancer subtype.
+      Finding observed in patient samples.
     examples:
       positive: >
         BRCA1 methylation was observed in 23% of triple-negative breast cancer patient

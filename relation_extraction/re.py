@@ -67,7 +67,7 @@ class RelationExtraction:
         entities_block = "\n".join(entity_lines)
 
         return (
-            "Determine all subject–predicate–object triples supported by the sentence. "
+            "Determine all subject–predicate–object triples supported by the sentences. "
             "Only use the entities and predicates provided. Reference entities by their index. "
             "Consider every valid subject/object pairing; return multiple triples if multiple "
             "relationships are expressed. If no predicates apply, return an empty list. "
@@ -101,6 +101,7 @@ class RelationExtraction:
         return {
             "pmid": sentence.get("pmid"),
             "sentence_id": sentence.get("sentence_id"),
+            "sentence_ids": sentence.get("sentence_ids") or [],
             "sentence": sentence.get("text"),
             "entities": entities,
             "predicate_names": [pred.name for pred in predicates],
@@ -247,6 +248,7 @@ class RelationExtraction:
                 {
                     "pmid": metadata.get("pmid"),
                     "sentence_id": metadata.get("sentence_id"),
+                    "sentence_ids": metadata.get("sentence_ids"),
                     "sentence": metadata.get("sentence"),
                     "subject": subject_ent,
                     "object": object_ent,

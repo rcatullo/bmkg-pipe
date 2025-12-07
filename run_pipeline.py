@@ -99,15 +99,22 @@ def main():
         relation_log_path,
     )
 
-    sentences = list(utils.load_sentences(input_path))
-    log_stage("entity_queue", sentences=len(sentences))
+    batch_size = int(config.get("data", {}).get("batch_size", 1))
+    sentences = list(utils.load_sentences(input_path, batch_size=batch_size))
+    total_sentences = sum(len(sentence.sentence_ids) for sentence in sentences)
+    log_stage(
+        "entity_queue",
+        sentence_batches=len(sentences),
+        total_sentences=total_sentences,
+        batch_size=batch_size,
+    )
     ner.add_sentences(sentences)
     log_stage("entity_execute", sentences=ner.total_sentences)
     entity_mapping = ner.run()
     log_stage("entity_results", sentences=len(entity_mapping))
 
     for sentence in sentences:
-        sentence_count += 1
+        sentence_count += len(sentence.sentence_ids)
         entities = entity_mapping.get((sentence.pmid, sentence.sentence_id), [])
         if not entities:
             logger.debug(
@@ -125,7 +132,12 @@ def main():
             pair_count=len(allowed_preds),
         )
         re.add_sentence(
-            {"pmid": sentence.pmid, "sentence_id": sentence.sentence_id, "text": sentence.text},
+            {
+                "pmid": sentence.pmid,
+                "sentence_id": sentence.sentence_id,
+                "sentence_ids": sentence.sentence_ids,
+                "text": sentence.text,
+            },
             entities,
             allowed_preds,
         )

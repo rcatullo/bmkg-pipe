@@ -9,6 +9,7 @@ llm:
 data:
   input_file: "data/pubmed_talazoparib.jsonl"
   output_file: "data/relations.jsonl"
+  batch_size: 3
 
 logging:
   level: "INFO"
