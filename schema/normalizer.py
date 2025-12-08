@@ -86,32 +86,3 @@ class Normalizer:
 
         return normalized
 
-    def normalize(self, entity: Dict, context: str = "") -> Dict:
-        cls = entity.get("class")
-        entity_text = entity.get("text", "")
-        canonical_form = entity.get("canonical_form") or entity_text
-
-        chosen: Optional[str] = None
-        if self.umls_client and cls in ["Gene", "Chemical", "Disease", "Phenotype", "Pathway", "Mutation"]:
-            umls_cui = self.umls_client.search_concept(canonical_form)
-            if umls_cui:
-                chosen = f"UMLS:{umls_cui}"
-                self._canonical_to_id[canonical_form] = chosen
-            else:
-                match_id, score = self._fuzzy_match_canonical(canonical_form)
-                if match_id and score >= 0.88:
-                    chosen = match_id
-        if chosen is None:
-            match_id, score = self._fuzzy_match_canonical(canonical_form)
-            if match_id and score >= 0.88:
-                chosen = match_id
-
-        normalized = entity.copy()
-        normalized["id"] = chosen
-        if canonical_form:
-            normalized["canonical_form"] = canonical_form
-        # Remove any legacy ids field
-        normalized.pop("ids", None)
-        normalized.pop("umls_cui", None)
-        return normalized
-

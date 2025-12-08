@@ -32,10 +32,10 @@ class AnnotatedEntity:
 class EntityLinker:
     """Resolve free-text mentions in a question to KG nodes.
 
-    Uses LLM-based entity annotation, UMLS CUI lookup, and Cypher matching:
+    Uses LLM-based entity annotation, optional UMLS lookup for KG ids, and Cypher matching:
     - LLM annotates question to extract biomedical entities with canonical forms
-    - UMLS API provides CUIs for canonical forms
-    - Cypher matching prioritizes CUI-based matching, falls back to fuzzy matching
+    - UMLS API can provide CUIs that map directly to node ids (e.g., UMLS:C1425006)
+    - Cypher matching prioritizes id-based matching, falls back to fuzzy matching
     """
 
     def __init__(
@@ -114,26 +114,26 @@ class EntityLinker:
             logger.error("Failed to annotate question with LLM: %s", exc, exc_info=True)
             return []
 
-    def _get_umls_cui(self, canonical_form: str) -> Optional[str]:
-        """Query UMLS API to get CUI for canonical form."""
+    def _get_umls_id(self, canonical_form: str) -> Optional[str]:
+        """Query UMLS API to get a KG-ready id (UMLS:CXXXX)."""
         if not canonical_form or not self.umls_client:
             return None
         
         try:
             cui = self.umls_client.search_concept(canonical_form)
-            return cui
+            return f"UMLS:{cui}" if cui else None
         except Exception as exc:
             logger.warning("UMLS search failed for '%s': %s", canonical_form, exc)
             return None
 
-    def _match_by_cui(
-        self, session: Any, cui: str, class_name: str
+    def _match_by_id(
+        self, session: Any, kg_id: str, class_name: str
     ) -> List[AnchorEntity]:
-        """Match nodes in Neo4j using UMLS CUI."""
-        # Match by CUI and optionally filter by class
+        """Match nodes in Neo4j using the canonical node id."""
+        # Match by id and optionally filter by class
         query = """
         MATCH (n)
-        WHERE n.umls_cui = $cui
+        WHERE n.id = $kg_id
         """
         
         # Add class filter if the class is valid
@@ -143,7 +143,7 @@ class EntityLinker:
         query += " RETURN n LIMIT 10"
         
         try:
-            records = session.run(query, cui=cui).data()
+            records = session.run(query, kg_id=kg_id).data()
             anchors = []
             for r in records:
                 n = r["n"]
@@ -152,22 +152,21 @@ class EntityLinker:
                 anchors.append(
                     AnchorEntity(
                         node_id=props.get("id"),
-                        umls_cui=props.get("umls_cui"),
                         label=props.get("name") or props.get("text") or "",
                         node_type=labels[0] if labels else "Entity",
                         match_score=0.95,
-                        match_method="umls_cui",
+                        match_method="id_exact",
                     )
                 )
             return anchors
         except Exception as exc:
-            logger.warning("Cypher query failed for CUI matching: %s", exc)
+            logger.warning("Cypher query failed for id matching: %s", exc)
             return []
 
     def _match_fuzzy(
         self, session: Any, term: str, class_name: str
     ) -> List[AnchorEntity]:
-        """Fallback fuzzy matching when CUI is not available."""
+        """Fallback fuzzy matching when id-based linking fails."""
         anchors = []
         
         # Try exact match first
@@ -192,7 +191,6 @@ class EntityLinker:
                     anchors.append(
                         AnchorEntity(
                             node_id=props.get("id"),
-                            umls_cui=props.get("umls_cui"),
                             label=props.get("name") or props.get("text") or term,
                             node_type=labels[0] if labels else "Entity",
                             match_score=0.9,
@@ -225,7 +223,6 @@ class EntityLinker:
                     anchors.append(
                         AnchorEntity(
                             node_id=props.get("id"),
-                            umls_cui=props.get("umls_cui"),
                             label=props.get("name") or props.get("text") or term,
                             node_type=labels[0] if labels else "Entity",
                             match_score=0.7,
@@ -244,8 +241,8 @@ class EntityLinker:
 
         Process:
         1. Use LLM to annotate question and extract entities with canonical forms
-        2. Query UMLS API to get CUIs for each canonical form
-        3. Match in Neo4j using CUI first, fall back to fuzzy matching
+        2. Optionally query UMLS API to get UMLS-based ids for each canonical form
+        3. Match in Neo4j using ids first, fall back to fuzzy matching
         """
         tried_terms: List[str] = []
         notes: List[str] = []
@@ -264,31 +261,31 @@ class EntityLinker:
             for entity in annotated_entities:
                 tried_terms.append(f"{entity.text} ({entity.class_name})")
                 
-                # Step 2: Get UMLS CUI
-                cui = None
+                # Step 2: Get KG id via UMLS (if available)
+                kg_id = None
                 if entity.canonical_form:
-                    cui = self._get_umls_cui(entity.canonical_form)
-                    if cui:
+                    kg_id = self._get_umls_id(entity.canonical_form)
+                    if kg_id:
                         notes.append(
-                            f"Found UMLS CUI {cui} for '{entity.text}' (canonical: {entity.canonical_form})"
+                            f"Found KG id {kg_id} for '{entity.text}' (canonical: {entity.canonical_form})"
                         )
                     else:
                         notes.append(
-                            f"No UMLS CUI found for '{entity.text}' (canonical: {entity.canonical_form})"
+                            f"No KG id found for '{entity.text}' (canonical: {entity.canonical_form})"
                         )
 
                 # Step 3: Match in Neo4j
                 matched = False
                 
-                # Try CUI-based matching first
-                if cui:
-                    cui_anchors = self._match_by_cui(session, cui, entity.class_name)
-                    if cui_anchors:
-                        anchors.extend(cui_anchors)
+                # Try id-based matching first
+                if kg_id:
+                    id_anchors = self._match_by_id(session, kg_id, entity.class_name)
+                    if id_anchors:
+                        anchors.extend(id_anchors)
                         matched = True
-                        notes.append(f"Matched {len(cui_anchors)} nodes via CUI {cui}")
+                        notes.append(f"Matched {len(id_anchors)} nodes via id {kg_id}")
 
-                # Fall back to fuzzy matching if no CUI match
+                # Fall back to fuzzy matching if no id match
                 if not matched:
                     # Use canonical form if available, otherwise original text
                     search_term = entity.canonical_form or entity.text

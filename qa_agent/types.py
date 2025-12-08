@@ -20,7 +20,6 @@ class AnchorEntity:
     """Grounded KG entity used as a starting point for expansion."""
 
     node_id: Optional[str]
-    umls_cui: Optional[str]
     label: str
     node_type: str  # e.g., "Gene", "Chemical"
     match_score: float

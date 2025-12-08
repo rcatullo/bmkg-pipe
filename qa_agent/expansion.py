@@ -17,7 +17,7 @@ class GraphExpander:
         """Return a small evidence subgraph and debug metadata.
 
         This uses a progressively relaxed strategy:
-        1) Try anchored expansion via node ids / umls_cui.
+        1) Try anchored expansion via node ids.
         2) If nothing is found, fall back to relation-only search constrained by intent.
         """
         debug: Dict[str, Any] = {"strategy": None, "notes": []}
@@ -39,10 +39,9 @@ class GraphExpander:
     def _expand_from_anchors(self, plan: QueryPlan, debug: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Start from anchored nodes and follow relation whitelist."""
         anchor_ids = [a.node_id for a in plan.anchors if a.node_id]
-        anchor_cuis = [a.umls_cui for a in plan.anchors if a.umls_cui]
 
-        if not anchor_ids and not anchor_cuis:
-            debug["notes"].append("Anchors had no node ids or umls_cui; skipping anchored expansion.")
+        if not anchor_ids:
+            debug["notes"].append("Anchors had no node ids; skipping anchored expansion.")
             return []
 
         allowed_rels = plan.allowed_relations
@@ -54,8 +53,6 @@ class GraphExpander:
                 WHERE type(r) IN $allowed_rels
                   AND (
                         (s.id IN $anchor_ids OR o.id IN $anchor_ids)
-                     OR (s.umls_cui IS NOT NULL AND s.umls_cui IN $anchor_cuis)
-                     OR (o.umls_cui IS NOT NULL AND o.umls_cui IN $anchor_cuis)
                   )
                 RETURN
                   properties(s) AS subject,
@@ -67,7 +64,6 @@ class GraphExpander:
                 """,
                 allowed_rels=allowed_rels,
                 anchor_ids=anchor_ids,
-                anchor_cuis=anchor_cuis,
             ).data()
         debug["notes"].append(f"Anchored expansion returned {len(records)} rows.")
         return records

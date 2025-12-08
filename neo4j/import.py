@@ -44,9 +44,6 @@ def import_triple(tx, record: Dict[str, Any]) -> None:
 
     s_name = subj.get("canonical_form") or s_text
     o_name = obj.get("canonical_form") or o_text
-    
-    s_umls_cui = subj.get("umls_cui")
-    o_umls_cui = obj.get("umls_cui")
 
     pmids = record.get("pmids") or []
     pmid = pmids[0] if pmids else None
@@ -58,15 +55,9 @@ def import_triple(tx, record: Dict[str, Any]) -> None:
 
     s_create_props = ["s.name = $s_name", "s.text = $s_text"]
     s_match_props = ["s.name = coalesce($s_name, s.name)", "s.text = coalesce($s_text, s.text)"]
-    if s_umls_cui:
-        s_create_props.append("s.umls_cui = $s_umls_cui")
-        s_match_props.append("s.umls_cui = coalesce($s_umls_cui, s.umls_cui)")
     
     o_create_props = ["o.name = $o_name", "o.text = $o_text"]
     o_match_props = ["o.name = coalesce($o_name, o.name)", "o.text = coalesce($o_text, o.text)"]
-    if o_umls_cui:
-        o_create_props.append("o.umls_cui = $o_umls_cui")
-        o_match_props.append("o.umls_cui = coalesce($o_umls_cui, o.umls_cui)")
 
     query = f"""
     MERGE (s:{s_class} {{id: $s_id}})
@@ -102,11 +93,6 @@ def import_triple(tx, record: Dict[str, Any]) -> None:
         "model_version": model_version,
         "sentences": sentences,
     }
-    if s_umls_cui:
-        params["s_umls_cui"] = s_umls_cui
-    if o_umls_cui:
-        params["o_umls_cui"] = o_umls_cui
-    
     tx.run(query, **params)
 
 

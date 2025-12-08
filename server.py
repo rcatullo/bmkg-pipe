@@ -8,6 +8,7 @@
 
 import json
 import os
+import sys
 from pathlib import Path
 from typing import List, Dict, Optional, Any
 
@@ -21,6 +22,12 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai import OpenAI
 from llama_index.core.node_parser import SentenceSplitter
 
+# Ensure bundled CT-Engine semantic_parser is importable
+ROOT_DIR = Path(__file__).parent
+CT_ENGINE_DIR = ROOT_DIR / "CT-Engine"
+if CT_ENGINE_DIR.exists():
+    sys.path.insert(0, str(CT_ENGINE_DIR))
+
 from neo4j import GraphDatabase
 from semantic_parser.modules.cypher import create_action_registry
 
@@ -28,7 +35,6 @@ from semantic_parser.modules.cypher import create_action_registry
 # -----------------------------
 # Paths
 # -----------------------------
-ROOT_DIR = Path(__file__).parent
 DATA_DIR = ROOT_DIR / "data"
 FRONTEND_DIR = ROOT_DIR / "frontend"
 
